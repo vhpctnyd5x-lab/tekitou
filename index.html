@@ -1,283 +1,270 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>【重要】おめでとうございます！</title>
-    <style>
-        body {
-            font-family: 'Helvetica Neue', Arial, sans-serif;
-            margin: 0;
-            padding: 0;
-            background-color: #f0f0f0;
-            color: #333;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-        }
+  <meta charset="UTF-8">
+  <title>2026 Z-Generation Trend Report</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;700&display=swap');
 
-        /* 偽サイトのコンテナ */
-        .scam-container {
-            background-color: white;
-            width: 100%;
-            max-width: 480px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-            border-radius: 8px;
-            overflow: hidden;
-            text-align: center;
-            position: relative;
-        }
+    :root {
+      --primary: #7b6cff;
+      --secondary: #ff7ac2;
+      --bg-gradient: linear-gradient(135deg, #fdf5ff 0%, #faf7ff 50%, #f5f7ff 100%);
+    }
 
-        /* ヘッダー部分（緊急感を煽る） */
-        .header {
-            background-color: #ff3b30;
-            color: white;
-            padding: 15px;
-            font-weight: bold;
-            font-size: 1.2em;
-            animation: pulse 2s infinite;
-        }
+    body {
+      font-family: 'Noto Sans JP', sans-serif;
+      background: var(--bg-gradient);
+      color: #333;
+      word-break: break-word;
+    }
 
-        @keyframes pulse {
-            0% { background-color: #ff3b30; }
-            50% { background-color: #ff0000; }
-            100% { background-color: #ff3b30; }
-        }
+    .glass-card {
+      background: rgba(255, 255, 255, 0.8);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      box-shadow: 0 8px 32px rgba(123, 108, 255, 0.05);
+    }
 
-        .content {
-            padding: 20px;
-        }
+    .trend-badge {
+      padding: 2px 12px;
+      border-radius: 999px;
+      font-size: 0.75rem;
+      font-weight: bold;
+    }
 
-        h1 {
-            color: #d32f2f;
-            font-size: 24px;
-            margin-bottom: 10px;
-        }
+    .high-cred { background: #e0fdf4; color: #10b981; }
+    .mix-cred { background: #fef3c7; color: #d97706; }
 
-        .prize-img {
-            background-color: #eee;
-            height: 150px;
-            margin: 20px auto;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 40px;
-            color: #888;
-            border: 2px dashed #ccc;
-        }
+    .category-icon {
+      width: 40px;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 12px;
+      background: white;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    }
 
-        p.urgent {
-            font-weight: bold;
-            color: #333;
-            margin-bottom: 20px;
-        }
+    .pill {
+      background: #f3f4f6;
+      border: 1px solid #e5e7eb;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 0.85rem;
+      color: #4b5563;
+      transition: all 0.2s;
+    }
 
-        .timer {
-            font-size: 2em;
-            color: #d32f2f;
-            font-weight: bold;
-            margin: 10px 0;
-        }
+    .pill:hover {
+      background: var(--primary);
+      color: white;
+      border-color: var(--primary);
+    }
 
-        /* 入力フォーム（見た目だけ） */
-        .fake-form {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            margin-top: 20px;
-        }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
 
-        input {
-            padding: 12px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-            font-size: 16px;
-        }
-
-        button.submit-btn {
-            background-color: #28a745;
-            color: white;
-            border: none;
-            padding: 15px;
-            font-size: 18px;
-            font-weight: bold;
-            border-radius: 4px;
-            cursor: pointer;
-            margin-top: 10px;
-            transition: background 0.3s;
-        }
-
-        button.submit-btn:hover {
-            background-color: #218838;
-        }
-
-        /* ドッキリ成功時のオーバーレイ */
-        #prank-overlay {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0,0,0,0.9);
-            z-index: 1000;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            color: white;
-            text-align: center;
-            padding: 20px;
-            box-sizing: border-box;
-        }
-
-        .prank-message {
-            background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 99%, #fecfef 100%);
-            color: #333;
-            padding: 40px;
-            border-radius: 20px;
-            max-width: 90%;
-            animation: popIn 0.5s ease-out;
-            box-shadow: 0 0 30px rgba(255,255,255,0.5);
-        }
-
-        .prank-title {
-            font-size: 32px;
-            font-weight: bold;
-            margin-bottom: 20px;
-            color: #d32f2f;
-        }
-
-        .prank-text {
-            font-size: 18px;
-            line-height: 1.6;
-        }
-
-        .safety-tips {
-            margin-top: 20px;
-            background-color: rgba(255,255,255,0.8);
-            padding: 15px;
-            border-radius: 10px;
-            font-size: 14px;
-            text-align: left;
-        }
-
-        .safety-tips ul {
-            padding-left: 20px;
-            margin: 10px 0;
-        }
-
-        .close-btn {
-            margin-top: 20px;
-            padding: 10px 30px;
-            background-color: #333;
-            color: white;
-            border: none;
-            border-radius: 25px;
-            cursor: pointer;
-            font-size: 16px;
-        }
-
-        @keyframes popIn {
-            0% { transform: scale(0.5); opacity: 0; }
-            100% { transform: scale(1); opacity: 1; }
-        }
-
-        .footer {
-            margin-top: 20px;
-            font-size: 10px;
-            color: #999;
-        }
-    </style>
+    .animate-fade {
+      animation: fadeIn 0.6s ease-out forwards;
+    }
+  </style>
 </head>
-<body>
+<body class="min-h-screen pb-12">
 
-    <!-- 偽サイトの本体 -->
-    <div class="scam-container">
-        <div class="header">
-            ⚠ 当選通知：アクションが必要です
-        </div>
-        <div class="content">
-            <h1>おめでとうございます！</h1>
-            <p class="urgent">あなたは最新のスマートフォン当選者に選ばれました！</p>
-            
-            <div class="prize-img">
-                🎁
-            </div>
-
-            <p>賞品を受け取るには、以下のフォームに情報を入力してください。<br>残り時間わずかです！</p>
-            
-            <div class="timer" id="timer">05:00</div>
-
-            <!-- 偽のフォーム（データは送信されません） -->
-            <div class="fake-form">
-                <input type="text" placeholder="氏名" required>
-                <input type="email" placeholder="メールアドレス" required>
-                <input type="tel" placeholder="電話番号" required>
-                <button class="submit-btn" onclick="triggerPrank()">賞品を受け取る ➡</button>
-            </div>
-            
-            <div class="footer">
-                © 2024 Prize Giveaway Center. All rights reserved.
-            </div>
-        </div>
+  <!-- Header -->
+  <header class="pt-12 pb-8 px-4 text-center">
+    <div class="inline-block bg-white/50 px-4 py-1 rounded-full text-sm font-bold text-indigo-500 mb-4 tracking-widest uppercase">
+      2026 Spring/Summer
     </div>
+    <h1 class="text-3xl md:text-4xl font-black mb-2 tracking-tight">
+      <span class="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-pink-500">
+        日本Z世代トレンドまとめ
+      </span>
+    </h1>
+    <p class="text-gray-500 text-sm max-w-md mx-auto">
+      リアルな媒体データとSNSの体感をミックスした、2026年春の最前線スナップショット
+    </p>
+  </header>
 
-    <!-- ドッキリ成功オーバーレイ -->
-    <div id="prank-overlay">
-        <div class="prank-message">
-            <div class="prank-title">🎉 ドッキリ大成功！ 🎉</div>
-            <div class="prank-text">
-                驚かせてごめんね！<br>
-                これは偽サイトのシミュレーションです。<br>
-                （入力した情報はどこにも送信されていません）
+  <main class="max-w-6xl mx-auto px-4">
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+      
+      <!-- Left Content -->
+      <div class="lg:col-span-8 space-y-8">
+        
+        <!-- Fashion Section -->
+        <section class="animate-fade">
+          <div class="flex items-center gap-3 mb-4">
+            <div class="category-icon text-indigo-500 text-xl">👗</div>
+            <h2 class="text-xl font-bold">ファッション：クラシック回帰</h2>
+          </div>
+          <div class="glass-card rounded-3xl p-6">
+            <div class="flex items-center gap-2 mb-4">
+              <span class="trend-badge high-cred">信頼度：高</span>
+              <span class="text-xs text-gray-400">主要メディア・コレクション合致</span>
             </div>
-            
-            <div class="safety-tips">
-                <strong>🛡️ 詐欺には気をつけよう！</strong>
-                <p>本物の詐欺サイトもこのように「当選しました」「急いでください」といって情報を入力させようとします。</p>
-                <ul>
-                    <li>知らないURLは開かない</li>
-                    <li>「無料」「当選」などの甘い言葉を疑う</li>
-                    <li>個人情報の入力は慎重に</li>
-                </ul>
+            <p class="mb-4 text-gray-700 leading-relaxed">
+              「きちんと感」と「リラックス」の融合。かっちりしたテーラリングをあえて着崩すスタイルが主流です。
+            </p>
+            <div class="flex flex-wrap gap-2 mb-6">
+              <span class="pill">バルーンパンツ</span>
+              <span class="pill">進化系トレンチ</span>
+              <span class="pill">ホワイトレイヤード</span>
+              <span class="pill">ディープブルー</span>
             </div>
+            <div class="bg-indigo-50 p-4 rounded-2xl border border-indigo-100">
+              <p class="text-xs text-indigo-700 font-bold mb-1">【Note】令嬢グレーについて</p>
+              <p class="text-xs text-indigo-600">一部のメディアで提唱されている呼称。汎用的なトレンドというよりは「キャッチコピー」として捉えるのがスマート。</p>
+            </div>
+          </div>
+        </section>
 
-            <button class="close-btn" onclick="location.reload()">閉じる</button>
+        <!-- Beauty Section -->
+        <section class="animate-fade" style="animation-delay: 0.1s">
+          <div class="flex items-center gap-3 mb-4">
+            <div class="category-icon text-pink-500 text-xl">💄</div>
+            <h2 class="text-xl font-bold">美容・メイク：多幸感＆桜オーラ</h2>
+          </div>
+          <div class="glass-card rounded-3xl p-6">
+            <div class="flex items-center gap-2 mb-4">
+              <span class="trend-badge high-cred">信頼度：高</span>
+              <span class="text-xs text-gray-400">春の新作コスメ動向と完全一致</span>
+            </div>
+            <p class="mb-4 text-gray-700 leading-relaxed">
+              桜や花びらを連想させるピンクが主役。質感は「光のヴェール」をまとったような透けツヤ感が重視されます。
+            </p>
+            <div class="flex flex-wrap gap-2 mb-4">
+              <span class="pill">透明感ブラー</span>
+              <span class="pill">オーロラハイライト</span>
+              <span class="pill">花びらフェイス</span>
+              <span class="pill">多幸感チーク</span>
+            </div>
+            <p class="text-xs text-gray-400 italic">※「見せブラ」「ミニマリストビューティ」は特定のライフスタイル提案に近いワード。</p>
+          </div>
+        </section>
+
+        <!-- Culture Section -->
+        <section class="animate-fade" style="animation-delay: 0.2s">
+          <div class="flex items-center gap-3 mb-4">
+            <div class="category-icon text-yellow-500 text-xl">✨</div>
+            <h2 class="text-xl font-bold">カルチャー：平成女児＆シール交換</h2>
+          </div>
+          <div class="glass-card rounded-3xl p-6">
+            <div class="flex items-center gap-2 mb-4">
+              <span class="trend-badge high-cred">信頼度：高</span>
+              <span class="text-xs text-gray-400">SNS（TikTok/Instagram）バズ傾向</span>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <h3 class="text-sm font-bold text-gray-500 uppercase tracking-widest mb-2">アナログ回帰</h3>
+                <p class="text-gray-700 text-sm mb-3">シール帳・シール交換がリバイバル。デジタル疲れの反動として、手元で触れる「モノ」の可愛さが再評価されています。</p>
+                <div class="flex flex-wrap gap-2">
+                  <span class="pill">シール帳</span>
+                  <span class="pill">平成女児</span>
+                </div>
+              </div>
+              <div class="bg-gray-50 p-4 rounded-2xl">
+                <h3 class="text-sm font-bold text-gray-500 uppercase tracking-widest mb-2">SNSの動き</h3>
+                <p class="text-gray-600 text-xs">カップルや親子でのシール交換動画が人気。平成初期の「女児向けホビー」を令和のセンスで再定義する動きが加速中。</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Lifestyle Section -->
+        <section class="animate-fade" style="animation-delay: 0.3s">
+          <div class="flex items-center gap-3 mb-4">
+            <div class="category-icon text-green-500 text-xl">🍃</div>
+            <h2 class="text-xl font-bold">メンタル・ライフスタイル</h2>
+          </div>
+          <div class="glass-card rounded-3xl p-6">
+            <div class="flex items-center gap-2 mb-4">
+              <span class="trend-badge mix-cred">信頼度：中</span>
+              <span class="text-xs text-gray-400">予測と概念レベルが混在</span>
+            </div>
+            <div class="space-y-4">
+              <div>
+                <h4 class="font-bold text-indigo-600 text-sm">アテンションデトックス</h4>
+                <p class="text-sm text-gray-600">通知を切り、少人数やオフラインの時間を意図的に作るマインドセット。一方でAIを駆使する「タイパ志向」も共存。</p>
+              </div>
+              <div class="border-t border-gray-100 pt-4">
+                <h4 class="font-bold text-indigo-600 text-sm">流行語の解釈</h4>
+                <p class="text-sm text-gray-600">「好きすぎて滅！」「苦労キャンセル」などのワードは、全国規模というよりはコミュニティ内での「流行り」に近い。</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+      </div>
+
+      <!-- Right Sidebar -->
+      <div class="lg:col-span-4 space-y-6">
+        
+        <!-- Reliability Map -->
+        <div class="bg-white rounded-3xl p-6 shadow-sm border border-gray-100">
+          <h3 class="font-black text-lg mb-6 flex items-center gap-2">
+            信頼度マップ
+          </h3>
+          <div class="space-y-6">
+            <div>
+              <div class="flex justify-between items-center mb-2">
+                <span class="text-xs font-bold text-emerald-600">◎ 本物トレンド（確実）</span>
+              </div>
+              <div class="flex flex-wrap gap-1">
+                <span class="text-[10px] bg-emerald-50 text-emerald-600 px-2 py-1 rounded">バルーンパンツ</span>
+                <span class="text-[10px] bg-emerald-50 text-emerald-600 px-2 py-1 rounded">ピンクメイク</span>
+                <span class="text-[10px] bg-emerald-50 text-emerald-600 px-2 py-1 rounded">シール帳</span>
+                <span class="text-[10px] bg-emerald-50 text-emerald-600 px-2 py-1 rounded">AI活用</span>
+              </div>
+            </div>
+            <div>
+              <div class="flex justify-between items-center mb-2">
+                <span class="text-xs font-bold text-amber-600">△ ローカル・予測（参考）</span>
+              </div>
+              <div class="flex flex-wrap gap-1">
+                <span class="text-[10px] bg-amber-50 text-amber-600 px-2 py-1 rounded">令嬢グレー</span>
+                <span class="text-[10px] bg-amber-50 text-amber-600 px-2 py-1 rounded">苦労キャンセル</span>
+                <span class="text-[10px] bg-amber-50 text-amber-600 px-2 py-1 rounded">M!LK特定曲</span>
+                <span class="text-[10px] bg-amber-50 text-amber-600 px-2 py-1 rounded">好きすぎて滅</span>
+              </div>
+            </div>
+          </div>
         </div>
+
+        <!-- Summary -->
+        <div class="bg-gradient-to-br from-indigo-500 to-purple-600 rounded-3xl p-6 text-white shadow-xl">
+          <h3 class="font-bold text-lg mb-4">総評：2026年の空気感</h3>
+          <p class="text-sm leading-relaxed opacity-90 mb-4">
+            「公式な世界的トレンド」をそのまま受け入れるのではなく、自分たちにとっての「エモさ（平成女児・シール）」や「効率（AI）」に落とし込む傾向がより顕著になっています。
+          </p>
+          <div class="bg-white/20 p-4 rounded-xl text-xs">
+            <strong>Check Point:</strong><br>
+            メディア主導のキャッチコピー（令嬢、キャンセル等）に惑わされず、実際の「売れているモノ」と「バズっている行動」を切り分けるのがコツ。
+          </div>
+        </div>
+
+        <!-- Event Link -->
+        <div class="glass-card rounded-2xl p-4 flex items-center justify-between group cursor-pointer hover:bg-white transition-colors">
+          <div>
+            <p class="text-[10px] text-gray-400 font-bold uppercase tracking-widest">Spring Event</p>
+            <p class="text-sm font-bold">ディズニーシー 25周年</p>
+          </div>
+          <div class="text-indigo-500 group-hover:translate-x-1 transition-transform">→</div>
+        </div>
+
+      </div>
     </div>
+  </main>
 
-    <script>
-        // カウントダウンタイマーの演出
-        function startTimer(duration, display) {
-            var timer = duration, minutes, seconds;
-            setInterval(function () {
-                minutes = parseInt(timer / 60, 10);
-                seconds = parseInt(timer % 60, 10);
+  <footer class="mt-12 text-center text-gray-400 text-[10px] tracking-widest uppercase">
+    &copy; 2026 Trend Analysis Report / Japan Insight
+  </footer>
 
-                minutes = minutes < 10 ? "0" + minutes : minutes;
-                seconds = seconds < 10 ? "0" + seconds : seconds;
-
-                display.textContent = minutes + ":" + seconds;
-
-                if (--timer < 0) {
-                    timer = duration;
-                }
-            }, 1000);
-        }
-
-        window.onload = function () {
-            var fiveMinutes = 60 * 5,
-                display = document.querySelector('#timer');
-            startTimer(fiveMinutes, display);
-        };
-
-        // ドッキリ発動関数
-        function triggerPrank() {
-            // 入力欄が空でも発動しますが、雰囲気のために少し待つ演出を入れても面白いです
-            // ここでは即座に表示します
-            document.getElementById('prank-overlay').style.display = 'flex';
-        }
-    </script>
 </body>
 </html>
