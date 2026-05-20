@@ -2177,7 +2177,8 @@ function showMultiplayerLobby() {
 
 function mpCreateRoom() {
   if (mpPeer) mpPeer.destroy();
-  const code = Array.from({length:6},()=>'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'[Math.floor(Math.random()*33)]).join('');
+  const ROOM_ALPHA = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  const code = Array.from({length:6},()=>ROOM_ALPHA[Math.floor(Math.random()*ROOM_ALPHA.length)]).join('');
   mpIsHost = true;
   mpPeer = new Peer('DNGN_' + code);
   mpPeer.on('open', () => {
@@ -2220,7 +2221,7 @@ function myStats() { const p=G.player; return {hp:p.hp,maxHp:p.maxHp,mp:p.mp,max
 
 function handleMpData(data) {
   if (data.type === 'hello') {
-    mpOppState = { name: data.name, ...data.stats };
+    mpOppState = { name: escHtml(data.name || '???'), ...data.stats };
     startMpBattle();
   } else if (data.type === 'action') {
     handleMpOppAction(data);
@@ -2279,6 +2280,10 @@ function mpCloseSkill() {
   document.getElementById('mp-skill-menu').style.display='none';
 }
 
+function escHtml(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
 function mpLog(msg, type='system') {
   const log=document.getElementById('mp-battle-log');
   const div=document.createElement('div');
@@ -2331,7 +2336,7 @@ function handleMpOppAction(data) {
   if (data.action==='surrender') { mpLog(`🏳 ${op.name}が降参した！`,'enemy'); mpEndBattle(true); return; }
   if (data.action==='heal')      { mpLog(`💚 ${op.name}がHPを回復した！`,'enemy'); }
   else {
-    const realDmg = Math.max(1,(data.damage||10)-Math.floor((my.def||8)/2));
+    const realDmg = Math.max(1, data.damage || 10);
     my.hp = Math.max(0,my.hp-realDmg);
     mpLog(`💥 ${op.name}の攻撃！ ${my.name}に${realDmg}ダメージ！`,'enemy');
     if (my.hp<=0) { mpEndBattle(false); return; }
