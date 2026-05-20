@@ -1,573 +1,2385 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-  <meta charset="UTF-8">
-  <title>2026 Z世代トレンドレポート</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;600;700;900&display=swap" rel="stylesheet">
-  <script src="https://cdn.tailwindcss.com"></script>
-  <style>
-    :root {
-      --grad-1: #7c3aed;
-      --grad-2: #ec4899;
-      --grad-3: #f97316;
-      --grad-4: #06b6d4;
-    }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="format-detection" content="telephone=no">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>⚔️ DUNGEON AI RPG ⚔️</title>
+<script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: #0a0a0f;
+    color: #c8c8d8;
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 14px;
+    min-height: 100dvh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 10px;
+    overscroll-behavior: none;
+    -webkit-overflow-scrolling: touch;
+    touch-action: manipulation;
+  }
+  #app {
+    width: 100%;
+    max-width: 800px;
+    border: 1px solid #333;
+    background: #0d0d1a;
+    border-radius: 4px;
+    overflow: hidden;
+    box-shadow: 0 0 40px #0006, 0 0 80px #1a1a3322;
+  }
+  .screen { display: none; padding: 20px; }
+  .screen.active { display: block; }
 
-    * { box-sizing: border-box; }
+  .game-header {
+    background: #0a0a14;
+    border-bottom: 1px solid #222;
+    padding: 10px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .game-title { font-size: 18px; color: #7070ff; text-shadow: 0 0 10px #4444ff88; letter-spacing: 2px; }
+  .header-stats { font-size: 12px; color: #888; }
 
-    body {
-      font-family: 'Noto Sans JP', sans-serif;
-      background: #f8f7ff;
-      color: #1a1a2e;
-      min-height: 100vh;
-      overflow-x: hidden;
-    }
+  pre.ascii { color: #4488ff; text-shadow: 0 0 8px #2244ff66; line-height: 1.2; font-size: 12px; text-align: center; white-space: pre; }
+  pre.ascii.enemy { color: #ff4444; text-shadow: 0 0 8px #ff222266; }
+  pre.ascii.player-art { color: #44ff88; text-shadow: 0 0 8px #22ff4466; }
 
-    /* ── BG noise texture ── */
-    body::before {
-      content: '';
-      position: fixed;
-      inset: 0;
-      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
-      pointer-events: none;
-      z-index: 0;
-    }
+  button {
+    background: #111122; color: #aaaaee; border: 1px solid #334;
+    padding: 8px 18px; cursor: pointer; font-family: inherit; font-size: 13px;
+    border-radius: 2px; transition: all 0.15s;
+  }
+  button:hover { background: #1a1a44; border-color: #556; color: #eeeeff; box-shadow: 0 0 8px #3333aa44; }
+  button.primary { border-color: #5555ff; color: #aaaaff; }
+  button.primary:hover { background: #222255; box-shadow: 0 0 12px #4444ff66; }
+  button.danger { border-color: #ff4444; color: #ff8888; }
+  button.danger:hover { background: #331111; }
+  button.success { border-color: #44ff88; color: #88ffaa; }
+  button.success:hover { background: #0a2211; }
+  button:disabled { opacity: 0.4; cursor: not-allowed; }
 
-    /* ── Gradient blob BG ── */
-    .bg-blobs {
-      position: fixed;
-      inset: 0;
-      pointer-events: none;
-      z-index: 0;
-      overflow: hidden;
-    }
-    .bg-blobs::before {
-      content: '';
-      position: absolute;
-      width: 600px; height: 600px;
-      border-radius: 50%;
-      background: radial-gradient(circle, rgba(124,58,237,0.12) 0%, transparent 70%);
-      top: -200px; left: -200px;
-    }
-    .bg-blobs::after {
-      content: '';
-      position: absolute;
-      width: 500px; height: 500px;
-      border-radius: 50%;
-      background: radial-gradient(circle, rgba(236,72,153,0.1) 0%, transparent 70%);
-      bottom: 0; right: -100px;
-    }
+  input[type="text"], input[type="password"] {
+    background: #0a0a14; border: 1px solid #334; color: #ccc;
+    padding: 8px 12px; font-family: inherit; font-size: 13px;
+    border-radius: 2px; width: 100%;
+  }
+  input:focus { outline: none; border-color: #5555ff; }
 
-    /* ── Glass card ── */
-    .glass {
-      background: rgba(255, 255, 255, 0.75);
-      backdrop-filter: blur(16px);
-      -webkit-backdrop-filter: blur(16px);
-      border: 1px solid rgba(255, 255, 255, 0.6);
-      box-shadow: 0 4px 24px rgba(124,58,237,0.06), 0 1px 2px rgba(0,0,0,0.04);
-      transition: transform 0.3s cubic-bezier(0.2,0,0.2,1), box-shadow 0.3s cubic-bezier(0.2,0,0.2,1);
-    }
-    .glass:hover {
-      transform: translateY(-4px);
-      box-shadow: 0 16px 40px rgba(124,58,237,0.12), 0 4px 8px rgba(0,0,0,0.06);
-    }
+  .bar-container { margin: 4px 0; }
+  .bar-label { font-size: 11px; color: #888; margin-bottom: 2px; }
+  .bar { height: 10px; background: #111; border: 1px solid #222; border-radius: 2px; overflow: hidden; }
+  .bar-fill { height: 100%; transition: width 0.4s; border-radius: 1px; }
+  .bar-fill.hp { background: linear-gradient(90deg, #aa2222, #ff4444); }
+  .bar-fill.mp { background: linear-gradient(90deg, #2222aa, #4444ff); }
+  .bar-fill.exp { background: linear-gradient(90deg, #228822, #44ff88); }
 
-    /* ── Gradient text ── */
-    .grad-text {
-      background: linear-gradient(135deg, var(--grad-1) 0%, var(--grad-2) 50%, var(--grad-3) 100%);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-    }
-    .grad-text-cool {
-      background: linear-gradient(135deg, #06b6d4 0%, #7c3aed 100%);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-    }
+  .stat-panel { background: #0a0a14; border: 1px solid #222; border-radius: 2px; padding: 12px; margin: 8px 0; }
+  .stat-row { display: flex; justify-content: space-between; align-items: center; margin: 3px 0; font-size: 12px; }
+  .stat-val { color: #eeeeff; font-weight: bold; }
+  .stat-name { color: #888; }
 
-    /* ── Score bar ── */
-    .score-track {
-      height: 6px;
-      background: #ede9fe;
-      border-radius: 99px;
-      overflow: hidden;
-    }
-    .score-fill {
-      height: 100%;
-      border-radius: 99px;
-      background: linear-gradient(90deg, #7c3aed, #ec4899);
-      transition: width 1s cubic-bezier(0.2,0,0.2,1);
-    }
+  #battle-log {
+    background: transparent;
+    flex: 1;
+    overflow-y: auto; padding: 6px 10px; font-size: 11px; line-height: 1.6;
+    min-height: 0;
+  }
+  .log-line { margin: 1px 0; }
+  .log-player { color: #66aaff; }
+  .log-enemy { color: #ff6666; }
+  .log-system { color: #aaaaaa; }
+  .log-item { color: #ffdd44; }
+  .log-skill { color: #aa44ff; }
+  .log-heal { color: #44ff88; }
+  .log-special { color: #ff88ff; text-shadow: 0 0 6px #ff44ff44; }
 
-    /* ── Pill tag ── */
-    .pill {
-      display: inline-flex;
-      align-items: center;
-      padding: 4px 14px;
-      border-radius: 99px;
-      font-size: 0.8rem;
-      font-weight: 600;
-      background: rgba(124,58,237,0.06);
-      border: 1px solid rgba(124,58,237,0.15);
-      color: #5b21b6;
-      transition: all 0.2s;
-      cursor: default;
-      white-space: nowrap;
-    }
-    .pill:hover {
-      background: linear-gradient(135deg, #7c3aed, #ec4899);
-      color: white;
-      border-color: transparent;
-      transform: scale(1.05);
-    }
+  .action-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 10px 0; }
+  .action-grid button { padding: 10px; font-size: 13px; }
 
-    /* ── Badge ── */
-    .badge-hot { background: #fef2f2; color: #ef4444; border: 1px solid #fecaca; }
-    .badge-ok  { background: #fefce8; color: #ca8a04; border: 1px solid #fde68a; }
-    .badge-rising { background: #eff6ff; color: #3b82f6; border: 1px solid #bfdbfe; }
+  .dungeon-room {
+    background: #0a0a14; border: 1px solid #222; padding: 15px; margin: 10px 0;
+    min-height: 80px; font-size: 13px; line-height: 1.7;
+  }
+  .room-exits { margin-top: 10px; display: flex; gap: 8px; flex-wrap: wrap; }
 
-    /* ── Section header icon ── */
-    .sec-icon {
-      width: 44px; height: 44px;
-      border-radius: 14px;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 1.25rem;
-      flex-shrink: 0;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-    }
+  .item-list { list-style: none; }
+  .item-list li { display: flex; justify-content: space-between; align-items: center; padding: 6px 8px; border-bottom: 1px solid #1a1a22; font-size: 12px; }
+  .item-list li:hover { background: #111122; }
 
-    /* ── Animate in ── */
-    @keyframes fadeUp {
-      from { opacity: 0; transform: translateY(20px); }
-      to   { opacity: 1; transform: translateY(0); }
-    }
-    .fade-up { opacity: 0; }
-    .fade-up.visible { animation: fadeUp 0.7s cubic-bezier(0.2,0,0.2,1) forwards; }
+  .peer-panel { background: #0a0a14; border: 1px solid #222; border-radius: 2px; padding: 15px; margin: 10px 0; }
+  .room-code { font-size: 24px; letter-spacing: 8px; color: #7777ff; text-shadow: 0 0 12px #4444ff88; text-align: center; padding: 15px; border: 1px dashed #334; margin: 10px 0; }
+  .vs-display { display: flex; justify-content: space-around; align-items: center; margin: 10px 0; gap: 10px; }
+  .vs-player { flex: 1; text-align: center; }
+  .vs-label { font-size: 20px; color: #ff4444; font-weight: bold; text-shadow: 0 0 10px #ff000088; }
 
-    /* ── Ticker ── */
-    @keyframes ticker {
-      from { transform: translateX(0); }
-      to   { transform: translateX(-50%); }
-    }
-    .ticker-wrap { overflow: hidden; white-space: nowrap; }
-    .ticker-inner { display: inline-flex; gap: 40px; animation: ticker 25s linear infinite; }
+  .separator { border: none; border-top: 1px solid #1a1a2a; margin: 15px 0; }
+  .center { text-align: center; }
+  .gold { color: #ffdd44; text-shadow: 0 0 6px #ffaa0044; }
+  .muted { color: #555; font-size: 11px; }
+  .flex-row { display: flex; gap: 8px; align-items: center; }
+  .thinking { color: #555; font-style: italic; animation: blink 1s infinite; }
+  @keyframes blink { 0%,100%{opacity:1}50%{opacity:0.3} }
+  .badge { display: inline-block; background: #1a1a33; border: 1px solid #334; border-radius: 10px; padding: 2px 8px; font-size: 11px; color: #8888cc; }
+  .rank-label { font-size: 11px; padding: 2px 8px; border-radius: 3px; display: inline-block; margin-left: 6px; }
+  .rank-easy   { background:#1a2a1a; border:1px solid #44aa44; color:#88ff88; }
+  .rank-mid    { background:#2a1a1a; border:1px solid #aaaa44; color:#ffff88; }
+  .rank-hard   { background:#2a1a2a; border:1px solid #aa44aa; color:#ff88ff; }
+  .ai-badge { font-size:10px; padding:1px 6px; border-radius:8px; background:#1a1a33; border:1px solid #4444aa; color:#8888ff; margin-left:4px; }
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: #050508; }
+  ::-webkit-scrollbar-thumb { background: #222244; border-radius: 3px; }
 
-    /* ── Header number ── */
-    .stat-card {
-      background: white;
-      border-radius: 20px;
-      padding: 16px 20px;
-      border: 1px solid rgba(124,58,237,0.1);
-      box-shadow: 0 2px 12px rgba(124,58,237,0.06);
-      text-align: center;
-    }
+  /* ===== BATTLE SCREEN: FULLSCREEN LANDSCAPE LAYOUT ===== */
+  #screen-battle { display: none; padding: 0; }
+  #screen-battle.active {
+    display: flex !important;
+    flex-direction: row;
+    position: fixed;
+    inset: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+    z-index: 200;
+    background: #0d0d1a;
+    overflow: hidden;
+  }
 
-    /* ── Mobile scroll ── */
-    .h-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
-    .h-scroll::-webkit-scrollbar { display: none; }
+  /* ── LEFT PANEL ── */
+  #b-left {
+    display: flex;
+    flex-direction: column;
+    width: clamp(150px, 30vw, 270px);
+    min-width: 140px;
+    flex-shrink: 0;
+    background: #080810;
+    border-right: 1px solid #1a1a33;
+    padding: 6px 5px;
+    gap: 5px;
+    overflow: hidden;
+    position: relative;
+  }
+  #b-enemy-stats {
+    background: #0a0a14;
+    border: 1px solid #2a1a1a;
+    border-radius: 2px;
+    padding: 5px 7px;
+    font-size: 11px;
+    flex-shrink: 0;
+  }
+  #b-player-stats {
+    background: #0a0a14;
+    border: 1px solid #1a1a2a;
+    border-radius: 2px;
+    padding: 5px 7px;
+    font-size: 11px;
+    flex-shrink: 0;
+  }
+  #b-status-row {
+    display: flex; gap: 6px; font-size: 10px; color: #888; margin-top: 2px; flex-wrap: wrap;
+  }
+  #b-status-effects { font-size: 9px; min-height: 12px; color: #ffaa44; margin-top: 1px; }
 
-    /* ── Divider ── */
-    .divider {
-      height: 1px;
-      background: linear-gradient(90deg, transparent, rgba(124,58,237,0.2), transparent);
-      margin: 8px 0;
-    }
-  </style>
+  /* ── RIGHT PANEL ── */
+  #b-right {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    overflow: hidden;
+  }
+  /* Battle graphics top */
+  #b-graphics {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: #070710;
+    border-bottom: 1px solid #151530;
+    min-height: 0;
+    overflow: hidden;
+    padding: 4px 8px;
+    gap: 4px;
+  }
+  #b-graphics pre.ascii.enemy { font-size: clamp(9px,1.5vw,13px); line-height: 1.15; }
+  #enemy-speech {
+    color: #ff8888;
+    font-style: italic;
+    font-size: clamp(9px,1.3vw,12px);
+    text-align: center;
+    min-height: 20px;
+    max-height: 40px;
+    overflow: hidden;
+    line-height: 1.4;
+    padding: 0 4px;
+    width: 100%;
+  }
+  /* Battle log bottom */
+  #b-log-section {
+    height: 38%;
+    min-height: 70px;
+    max-height: 46%;
+    display: flex;
+    flex-direction: column;
+    background: #050508;
+    border-top: 1px solid #111122;
+    overflow: hidden;
+  }
+  #b-log-label {
+    font-size: 9px;
+    color: #222244;
+    padding: 2px 8px 0;
+    letter-spacing: 1px;
+    flex-shrink: 0;
+  }
+  #ai-thinking {
+    flex-shrink: 0;
+    font-size: 10px;
+    padding: 2px 10px;
+  }
+
+  /* ── PORTRAIT HINT ── */
+  #rotate-hint {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 9997;
+    background: #0a0a14;
+    color: #6666aa;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    font-family: 'Courier New', monospace;
+    text-align: center;
+    padding: 20px;
+  }
+  #rotate-hint .rotate-icon { font-size: 48px; animation: rotate-pulse 2s ease-in-out infinite; }
+  @keyframes rotate-pulse { 0%,100%{ transform: rotate(0deg); } 50%{ transform: rotate(-90deg); } }
+  @media (orientation: portrait) and (max-width: 900px) {
+    #rotate-hint { display: flex; }
+  }
+
+  /* ===== GEAR TRANSITION ===== */
+  #gear-overlay {
+    position: fixed; inset: 0; z-index: 9999;
+    pointer-events: none; overflow: hidden; display: none;
+    align-items: center;
+  }
+  #gear-track {
+    position: absolute;
+    top: 50%; margin-top: -200px;
+    left: 0;
+  }
+  #gear-track.active { animation: gear-slide 1.0s linear forwards; }
+  #gear-spin-wrap.active { animation: gear-spin 1.0s linear forwards; }
+  @keyframes gear-slide {
+    0%   { transform: translateX(calc(100vw + 220px)); opacity: 0; }
+    8%   { opacity: 1; }
+    92%  { opacity: 1; }
+    100% { transform: translateX(calc(-100vw - 220px)); opacity: 0; }
+  }
+  @keyframes gear-spin { from { transform: rotate(0deg); } to { transform: rotate(720deg); } }
+
+  /* ===== ENEMY EFFECTS ===== */
+  #enemy-ascii {
+    position: relative;
+    transition: color 0.3s;
+    display: inline-block;
+  }
+  .enemy-hit {
+    animation: e-shake 0.35s ease, e-flash 0.35s ease !important;
+  }
+  @keyframes e-shake {
+    0%,100%{transform:translateX(0)}
+    20%{transform:translateX(-10px)}
+    40%{transform:translateX(10px)}
+    60%{transform:translateX(-6px)}
+    80%{transform:translateX(6px)}
+  }
+  @keyframes e-flash {
+    0%,100%{filter:none}
+    30%{filter:brightness(5) saturate(0) sepia(1) hue-rotate(270deg) drop-shadow(0 0 12px #ff2200)}
+    60%{filter:none}
+  }
+  .enemy-low-hp {
+    animation: e-flicker 2.2s infinite !important;
+  }
+  @keyframes e-flicker {
+    0%,89%,91%,95%,100%{opacity:1}
+    90%{opacity:0.2}
+    93%{opacity:0.6}
+    96%{opacity:0.3}
+  }
+  .enemy-critical {
+    animation: e-flicker 0.8s infinite, e-redpulse 1.2s infinite !important;
+  }
+  @keyframes e-redpulse {
+    0%,100%{color:#ff4444;text-shadow:0 0 8px #ff222266}
+    50%{color:#ff8888;text-shadow:0 0 20px #ff444488}
+  }
+  #enemy-display-wrap { position: relative; display: inline-block; }
+  .dmg-float {
+    position: absolute;
+    right: 10px; top: 10px;
+    font-family: 'Courier New', monospace;
+    font-weight: bold;
+    pointer-events: none;
+    animation: dmg-up 0.9s ease-out forwards;
+    z-index: 10;
+  }
+  @keyframes dmg-up {
+    0%   { transform: translateY(0);    opacity: 1; font-size: 20px; }
+    100% { transform: translateY(-55px); opacity: 0; font-size: 14px; }
+  }
+
+  /* ===== DIAL ===== */
+  #dial-section {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-end;
+    min-height: 0;
+    gap: 2px;
+    padding-bottom: 4px;
+  }
+  #dial-wrap {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    user-select: none;
+    -webkit-user-select: none;
+    width: 100%;
+  }
+  #battle-dial {
+    width: clamp(130px, 24vw, 230px);
+    height: clamp(130px, 24vw, 230px);
+    cursor: crosshair;
+    touch-action: none;
+    -webkit-tap-highlight-color: transparent;
+    filter: drop-shadow(0 0 10px #1a1a6644);
+  }
+  #dial-action-preview {
+    text-align: center;
+    font-size: 12px;
+    color: #6666cc;
+    height: 20px;
+    letter-spacing: 2px;
+    font-family: 'Courier New', monospace;
+    text-shadow: 0 0 8px #3333aa88;
+    width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  #dial-hint {
+    text-align: center;
+    font-size: 9px;
+    color: #252540;
+    letter-spacing: 0.5px;
+    width: 100%;
+  }
+  #item-popup {
+    position: absolute;
+    inset: 0;
+    z-index: 10;
+    background: #080810ee;
+    border: 1px solid #2a2a4a;
+    border-radius: 3px;
+    padding: 8px 6px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    overflow: hidden;
+  }
+  #item-popup .item-list {
+    flex: 1;
+    overflow-y: auto;
+    min-height: 0;
+  }
+</style>
 </head>
 <body>
+<div id="app">
 
-<div class="bg-blobs"></div>
+  <div class="game-header" id="game-header" style="display:none">
+    <span class="game-title">⚔ DUNGEON AI RPG</span>
+    <span class="header-stats" id="header-stats"></span>
+  </div>
 
-<!-- ── Ticker ── -->
-<div class="ticker-wrap bg-gradient-to-r from-violet-600 via-pink-500 to-orange-400 py-2 relative z-10">
-  <div class="ticker-inner text-white text-xs font-bold tracking-widest uppercase">
-    <span>2026 Spring/Summer</span><span>·</span>
-    <span>Z世代トレンドレポート</span><span>·</span>
-    <span>Fashion</span><span>·</span>
-    <span>Beauty</span><span>·</span>
-    <span>Culture</span><span>·</span>
-    <span>Lifestyle</span><span>·</span>
-    <span>Music</span><span>·</span>
-    <span>2026 Spring/Summer</span><span>·</span>
-    <span>Z世代トレンドレポート</span><span>·</span>
-    <span>Fashion</span><span>·</span>
-    <span>Beauty</span><span>·</span>
-    <span>Culture</span><span>·</span>
-    <span>Lifestyle</span><span>·</span>
-    <span>Music</span><span>·</span>
+  <!-- ========== TITLE ========== -->
+  <div class="screen active" id="screen-title">
+    <div style="text-align:center;margin:10px 0 24px;">
+<pre class="ascii" style="font-size:11px;">
+██████╗ ██╗   ██╗███╗  ██╗ ██████╗ ███████╗ ██████╗ ███╗  ██╗
+██╔══██╗██║   ██║████╗ ██║██╔════╝ ██╔════╝██╔═══██╗████╗ ██║
+██║  ██║██║   ██║██╔██╗██║██║ ███╗ █████╗  ██║   ██║██╔██╗██║
+██║  ██║██║   ██║██║╚████║██║  ██║ ██╔══╝  ██║   ██║██║╚████║
+██████╔╝╚██████╔╝██║ ╚███║╚██████╔╝███████╗╚██████╔╝██║ ╚███║
+╚═════╝  ╚═════╝ ╚═╝  ╚══╝ ╚═════╝ ╚══════╝ ╚═════╝ ╚═╝  ╚══╝
+                    ⚔  A I  R P G  ⚔
+</pre>
+    </div>
+
+    <div style="max-width:460px;margin:0 auto;">
+      <div class="stat-panel">
+        <div style="margin-bottom:8px;color:#888;font-size:12px;">🔑 Anthropic API キー <span style="color:#555;font-size:10px;">（なくても遊べます）</span></div>
+        <input type="password" id="api-key-input" placeholder="sk-ant-... （任意）" />
+        <div style="color:#555;font-size:10px;margin-top:4px;">入力するとAIがリアルタイムで敵のセリフ・行動を生成します</div>
+      </div>
+
+      <div class="stat-panel">
+        <div style="margin-bottom:8px;color:#888;font-size:12px;">⚔ 冒険者の名前</div>
+        <input type="text" id="player-name-input" placeholder="名前を入力..." maxlength="12" />
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:8px;margin-top:16px;">
+        <button class="primary" onclick="startSinglePlayer()" style="padding:14px;font-size:15px;">
+          ▶ ダンジョンへ潜る（ソロ）
+        </button>
+        <button onclick="showMultiplayerLobby()" style="padding:12px;font-size:14px;">
+          ⚔ オンライン対戦（2人）
+        </button>
+      </div>
+
+      <div style="margin-top:16px;padding:10px;background:#0a0a14;border:1px solid #1a1a33;border-radius:2px;font-size:11px;color:#666;line-height:1.7;">
+        <div style="color:#888;margin-bottom:4px;">👾 登場する敵（3体）</div>
+        <div>🟢 <span style="color:#88ff88;">初級</span> — スライム（ぷるぷる系、弱い）</div>
+        <div>🟡 <span style="color:#ffff88;">中級</span> — 骸骨戦士（古の戦士、手強い）</div>
+        <div>🔴 <span style="color:#ff88ff;">上級</span> — 邪龍【BOSS】（最強、圧倒的）</div>
+      </div>
+
+      <div class="muted center" style="margin-top:12px;">Powered by Claude claude-sonnet-4-6 · PeerJS P2P</div>
+    </div>
+  </div>
+
+  <!-- ========== DUNGEON ========== -->
+  <div class="screen" id="screen-dungeon">
+    <div style="display:flex;gap:15px;flex-wrap:wrap;">
+      <div style="flex:0 0 200px;">
+        <pre class="ascii player-art" style="font-size:11px;">
+   O
+  /|\
+  / \</pre>
+        <div class="stat-panel" style="font-size:12px;">
+          <div style="color:#aaaaff;margin-bottom:8px;font-size:13px;" id="player-name-display">冒険者</div>
+          <div class="stat-row"><span class="stat-name">Lv</span><span class="stat-val" id="d-level">1</span></div>
+          <div class="bar-container">
+            <div class="bar-label">HP <span id="d-hp">100</span>/<span id="d-maxhp">100</span></div>
+            <div class="bar"><div class="bar-fill hp" id="d-hp-bar" style="width:100%"></div></div>
+          </div>
+          <div class="bar-container">
+            <div class="bar-label">MP <span id="d-mp">50</span>/<span id="d-maxmp">50</span></div>
+            <div class="bar"><div class="bar-fill mp" id="d-mp-bar" style="width:100%"></div></div>
+          </div>
+          <div class="bar-container">
+            <div class="bar-label">EXP <span id="d-exp">0</span>/<span id="d-expnext">100</span></div>
+            <div class="bar"><div class="bar-fill exp" id="d-exp-bar" style="width:0%"></div></div>
+          </div>
+          <hr class="separator">
+          <div class="stat-row"><span class="stat-name">ATK</span><span class="stat-val" id="d-atk">15</span></div>
+          <div class="stat-row"><span class="stat-name">DEF</span><span class="stat-val" id="d-def">8</span></div>
+          <div class="stat-row"><span class="stat-name">💰</span><span class="gold" id="d-gold">0</span></div>
+        </div>
+        <div class="stat-panel" style="margin-top:8px;">
+          <div style="color:#888;font-size:11px;margin-bottom:6px;">🎒 アイテム (<span id="inv-count">0</span>)</div>
+          <ul class="item-list" id="inventory-list" style="max-height:100px;overflow-y:auto;"></ul>
+        </div>
+      </div>
+
+      <div style="flex:1;min-width:250px;">
+        <div class="dungeon-room" id="dungeon-room-text"></div>
+        <div class="room-exits" id="room-exits"></div>
+        <div id="dungeon-log" style="margin-top:8px;font-size:12px;color:#555;max-height:70px;overflow-y:auto;"></div>
+      </div>
+    </div>
+    <hr class="separator">
+    <button onclick="goTitle()">🚪 タイトルへ</button>
+  </div>
+
+  <!-- ========== BATTLE ========== -->
+  <div class="screen" id="screen-battle">
+
+    <!-- ── LEFT PANEL ── -->
+    <div id="b-left">
+      <!-- 敵ステータス -->
+      <div id="b-enemy-stats">
+        <div style="display:flex;align-items:center;gap:5px;margin-bottom:3px;flex-wrap:wrap;">
+          <span style="font-size:12px;color:#ff8888;" id="enemy-name-display">???</span>
+          <span class="rank-label" id="enemy-rank-label"></span>
+          <span id="ai-mode-badge"></span>
+        </div>
+        <div class="bar-container">
+          <div class="bar-label" style="font-size:10px;">HP <span id="e-hp">???</span>/<span id="e-maxhp">???</span></div>
+          <div class="bar"><div class="bar-fill hp" id="e-hp-bar" style="width:100%"></div></div>
+        </div>
+      </div>
+
+      <!-- プレイヤーステータス -->
+      <div id="b-player-stats">
+        <div style="color:#88aaff;font-size:11px;margin-bottom:3px;" id="b-player-name">冒険者</div>
+        <div class="bar-container">
+          <div class="bar-label" style="font-size:10px;">HP <span id="b-hp">100</span>/<span id="b-maxhp">100</span></div>
+          <div class="bar"><div class="bar-fill hp" id="b-hp-bar" style="width:100%"></div></div>
+        </div>
+        <div class="bar-container">
+          <div class="bar-label" style="font-size:10px;">MP <span id="b-mp">50</span>/<span id="b-maxmp">50</span></div>
+          <div class="bar"><div class="bar-fill mp" id="b-mp-bar" style="width:100%"></div></div>
+        </div>
+        <div id="b-status-row">
+          <span>ATK:<span id="b-atk" style="color:#eeeeff">15</span></span>
+          <span>DEF:<span id="b-def" style="color:#eeeeff">8</span></span>
+          <span class="gold">💰<span id="b-gold">0</span></span>
+        </div>
+        <div id="b-status-effects"></div>
+      </div>
+
+      <!-- ダイヤル -->
+      <div id="dial-section">
+        <div id="dial-action-preview">— SELECT —</div>
+        <div id="dial-wrap">
+          <svg id="battle-dial" viewBox="-135 -135 270 270"></svg>
+        </div>
+        <div id="dial-hint">タップ選択 · 中心長押しで回転入力</div>
+      </div>
+
+      <!-- アイテムポップアップ -->
+      <div id="item-popup" style="display:none;">
+        <div style="color:#888;font-size:10px;margin-bottom:4px;">🎒 使うアイテムを選択</div>
+        <ul class="item-list" id="battle-item-list"></ul>
+        <button onclick="closeItemPopup()" style="margin-top:4px;width:100%;font-size:11px;padding:4px;">← 戻る</button>
+      </div>
+    </div>
+
+    <!-- ── RIGHT PANEL ── -->
+    <div id="b-right">
+      <!-- 戦闘グラフィック（上） -->
+      <div id="b-graphics">
+        <div id="enemy-display-wrap">
+          <pre class="ascii enemy" id="enemy-ascii"></pre>
+        </div>
+        <div id="enemy-speech"></div>
+      </div>
+
+      <!-- バトルログ（下） -->
+      <div id="b-log-section">
+        <div id="b-log-label">BATTLE LOG</div>
+        <div id="battle-log"></div>
+        <div id="ai-thinking" class="thinking" style="display:none;padding:2px 10px;font-size:10px;">⏳ 敵が考えている...</div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ========== GAME OVER ========== -->
+  <div class="screen" id="screen-gameover">
+    <div style="text-align:center;padding:30px 0;">
+<pre class="ascii" style="color:#ff2222;font-size:10px;">
+ ██████╗  █████╗ ███╗   ███╗███████╗     ██████╗ ██╗   ██╗███████╗██████╗
+██╔════╝ ██╔══██╗████╗ ████║██╔════╝    ██╔═══██╗██║   ██║██╔════╝██╔══██╗
+██║  ███╗███████║██╔████╔██║█████╗      ██║   ██║██║   ██║█████╗  ██████╔╝
+██║   ██║██╔══██║██║╚██╔╝██║██╔══╝      ██║   ██║╚██╗ ██╔╝██╔══╝  ██╔══██╗
+╚██████╔╝██║  ██║██║ ╚═╝ ██║███████╗    ╚██████╔╝ ╚████╔╝ ███████╗██║  ██║
+ ╚═════╝ ╚═╝  ╚═╝╚═╝     ╚═╝╚══════╝     ╚═════╝   ╚═══╝  ╚══════╝╚═╝  ╚═╝
+</pre>
+      <div style="margin:20px 0;color:#888;">あなたは闇に飲み込まれた...</div>
+      <div id="gameover-stats" style="color:#666;font-size:12px;margin-bottom:20px;"></div>
+      <button class="primary" onclick="goTitle()" style="padding:12px 30px;">タイトルへ戻る</button>
+    </div>
+  </div>
+
+  <!-- ========== CLEAR ========== -->
+  <div class="screen" id="screen-clear">
+    <div style="text-align:center;padding:30px 0;">
+<pre class="ascii" style="color:#ffdd44;font-size:10px;">
+ ██╗   ██╗██╗ ██████╗████████╗ ██████╗ ██████╗ ██╗   ██╗
+ ██║   ██║██║██╔════╝╚══██╔══╝██╔═══██╗██╔══██╗╚██╗ ██╔╝
+ ██║   ██║██║██║        ██║   ██║   ██║██████╔╝ ╚████╔╝
+ ╚██╗ ██╔╝██║██║        ██║   ██║   ██║██╔══██╗  ╚██╔╝
+  ╚████╔╝ ██║╚██████╗   ██║   ╚██████╔╝██║  ██║   ██║
+   ╚═══╝  ╚═╝ ╚═════╝   ╚═╝    ╚═════╝ ╚═╝  ╚═╝   ╚═╝
+</pre>
+      <div style="margin:20px 0;color:#ffdd44;font-size:14px;">邪龍を討伐し、ダンジョンを制覇した！</div>
+      <div id="clear-stats" style="color:#888;font-size:12px;margin-bottom:20px;"></div>
+      <button class="success" onclick="goTitle()" style="padding:12px 30px;">タイトルへ戻る</button>
+    </div>
+  </div>
+
+  <!-- ========== MP LOBBY ========== -->
+  <div class="screen" id="screen-mp-lobby">
+    <div class="center" style="margin-bottom:15px;"><span class="game-title">⚔ オンライン対戦 ⚔</span></div>
+    <div style="display:flex;gap:15px;flex-wrap:wrap;">
+      <div class="peer-panel" style="flex:1;min-width:200px;">
+        <div style="color:#aaaaff;margin-bottom:10px;font-size:13px;">🏠 ホスト（部屋を作る）</div>
+        <button class="primary" onclick="mpCreateRoom()" style="width:100%;padding:10px;">部屋を作成</button>
+        <div id="room-code-display" style="display:none;">
+          <div style="color:#888;font-size:11px;margin-top:10px;">ルームコード（相手に伝える）</div>
+          <div class="room-code" id="room-code-text">------</div>
+          <div class="muted center" id="mp-host-status">相手の接続を待っています...</div>
+        </div>
+      </div>
+      <div class="peer-panel" style="flex:1;min-width:200px;">
+        <div style="color:#ff8888;margin-bottom:10px;font-size:13px;">🚪 ゲスト（部屋に入る）</div>
+        <input type="text" id="join-code-input" placeholder="ルームコードを入力..." style="margin-bottom:8px;" maxlength="6" />
+        <button class="danger" onclick="mpJoinRoom()" style="width:100%;padding:10px;">接続する</button>
+        <div id="mp-guest-status" class="muted center" style="margin-top:8px;"></div>
+      </div>
+    </div>
+    <hr class="separator">
+    <button onclick="goTitle()">← タイトルへ</button>
+  </div>
+
+  <!-- ========== MP BATTLE ========== -->
+  <div class="screen" id="screen-mp-battle">
+    <div class="center" style="margin-bottom:10px;">
+      <span class="game-title">⚔ P v P バトル ⚔</span>
+      <span class="badge" id="mp-role-badge" style="margin-left:8px;"></span>
+    </div>
+    <div class="vs-display">
+      <div class="vs-player">
+        <pre class="ascii player-art" style="font-size:10px;">
+  O
+ /|\
+ / \</pre>
+        <div style="color:#66aaff;font-size:13px;" id="mp-my-name">あなた</div>
+        <div class="bar-container">
+          <div class="bar-label">HP <span id="mp-my-hp">100</span>/<span id="mp-my-maxhp">100</span></div>
+          <div class="bar"><div class="bar-fill hp" id="mp-my-hp-bar" style="width:100%"></div></div>
+        </div>
+        <div class="bar-container">
+          <div class="bar-label">MP <span id="mp-my-mp">50</span>/<span id="mp-my-maxmp">50</span></div>
+          <div class="bar"><div class="bar-fill mp" id="mp-my-mp-bar" style="width:100%"></div></div>
+        </div>
+      </div>
+      <div class="vs-label">VS</div>
+      <div class="vs-player">
+        <pre class="ascii player-art" style="font-size:10px;color:#ff6666;text-shadow:0 0 8px #ff222266;">
+  O
+ /|\
+ / \</pre>
+        <div style="color:#ff8888;font-size:13px;" id="mp-opp-name">相手</div>
+        <div class="bar-container">
+          <div class="bar-label">HP <span id="mp-opp-hp">100</span>/<span id="mp-opp-maxhp">100</span></div>
+          <div class="bar"><div class="bar-fill hp" id="mp-opp-hp-bar" style="width:100%"></div></div>
+        </div>
+        <div class="bar-container">
+          <div class="bar-label">MP <span id="mp-opp-mp">50</span>/<span id="mp-opp-maxmp">50</span></div>
+          <div class="bar"><div class="bar-fill mp" id="mp-opp-mp-bar" style="width:100%"></div></div>
+        </div>
+      </div>
+    </div>
+    <div id="mp-battle-log" style="background:#070710;border:1px solid #1a1a33;border-radius:2px;height:150px;overflow-y:auto;padding:10px;font-size:12px;line-height:1.6;margin:10px 0;"></div>
+    <div class="action-grid" id="mp-action-buttons">
+      <button onclick="mpAction('attack')" id="mp-btn-attack">⚔ 攻撃</button>
+      <button onclick="mpOpenSkill()" id="mp-btn-skill">✨ スキル</button>
+      <button onclick="mpAction('heal')" id="mp-btn-heal">💚 回復(20MP)</button>
+      <button class="danger" onclick="mpAction('surrender')" id="mp-btn-surr">🏳 降参</button>
+    </div>
+    <div id="mp-skill-menu" style="display:none;" class="action-grid">
+      <button onclick="mpAction('skill_fire')">🔥 ファイア(10MP)</button>
+      <button onclick="mpAction('skill_thunder')">⚡ サンダー(15MP)</button>
+      <button onclick="mpAction('skill_blizzard')">❄️ ブリザド(25MP)</button>
+      <button onclick="mpAction('skill_mega')">💥 メガ斬り(20MP)</button>
+      <button onclick="mpCloseSkill()" style="grid-column:span 2">← 戻る</button>
+    </div>
+    <div id="mp-turn-indicator" style="text-align:center;margin:8px 0;font-size:13px;"></div>
+    <div id="mp-ai-thinking" class="thinking" style="display:none;text-align:center;margin:8px 0;">⏳ AIが実況中...</div>
+    <div id="mp-result" style="display:none;text-align:center;margin:15px 0;">
+      <div id="mp-result-text" style="font-size:18px;margin-bottom:10px;"></div>
+      <button onclick="goTitle()">タイトルへ戻る</button>
+    </div>
+  </div>
+
+</div>
+
+<!-- 縦画面ヒント（横画面専用） -->
+<div id="rotate-hint">
+  <div class="rotate-icon">📱</div>
+  <div style="font-size:16px;color:#8888cc;">横画面で遊んでください</div>
+  <div style="font-size:12px;color:#444466;margin-top:4px;">DUNGEON AI RPG は横画面専用です</div>
+</div>
+
+<script>
+// =============================================
+//  ENEMIES: 初級・中級・上級の3体
+//  各敵は3フェーズ + 状態異常 + 溜め攻撃を持つ
+// =============================================
+/*
+  行動タイプ:
+  attack      通常攻撃
+  bounce      体当たり（スライム）
+  poison      毒液：毒付与(毎ターンHP-6, 3ターン)
+  dissolve    溶解液：プレイヤーDEF-5 (2ターン)
+  split_atk   分裂攻撃：2回ヒット
+  charge      溜め予告 → 次ターンbig_bang
+  big_bang    溜め後の大爆発
+  heavy       重撃（骸骨）
+  guard       防御体勢（次被ダメ60%カット）
+  bone_regen  自己HP回復+30
+  double      二連撃（2回ヒット）
+  debuff_atk  プレイヤーATK-5 (2ターン)
+  berserk     自ATK+12（永続強化）
+  roar        咆哮：プレイヤースタン(1ターン行動不能)
+  breath      炎ブレス：高ダメ
+  tail        尻尾：プレイヤーDEF-6 (2ターン)
+  regen       自己HP回復+50（邪龍）
+  rage        自ATK+15、自DEF-8（龍の怒り）
+  extinction  滅びの炎：超大ダメ（HP≤20%限定）
+*/
+const ENEMIES = {
+  // ==================== 🟢 初級：スライム ====================
+  slime: {
+    id: 'slime', name: 'スライム', rank: 'easy', rankLabel: '初級',
+    hp: 60, maxHp: 60, atk: 8, def: 2,
+    exp: 35, gold: [8, 22],
+    ascii: `
+  ╔═══════════╗
+  ║  ◉     ◉  ║
+  ║   >·<·<   ║
+  ╠═══════════╣
+  ║ ▓▓▓▓▓▓▓▓ ║
+  ╚════╦═╦════╝
+       ╚═╝
+   [GEL-UNIT01]`,
+    asciiMid: `
+  ╔══X════════╗
+  ║  ◉  /  × ║
+  ║   >!<·<   ║
+  ╠══/════════╣
+  ║ ▓▓/▓▓▓▓▓ ║
+  ╚════╦!╦════╝
+       ╚═╝
+   [ERR:GEL-01]`,
+    asciiCrit: `
+  ╔══X══X═════╗
+  ║  X   /  × ║
+  ║  >!!<·*   ║
+  ╠══/══!═════╣
+  ║ ▓/▓X▓▓▓* ║
+  ╚════!═!════╝
+      *╚╝*
+  [CRITICAL!!]`,
+    aiSystem: `あなたはRPGのスライムです。ぷるぷるした可愛いモンスター。
+セリフは「ぷるる！」「ジュルジュル...」など擬音語主体。
+毒液・分裂・溜め攻撃も使う。必ずJSON形式のみで返答：
+{"action":"attack|bounce|poison|dissolve|split_atk|charge","damage":数値,"message":"セリフ(10文字以内)"}`,
+    fallback: {
+      // 溜め状態フラグ（戦闘ごとにリセット）
+      getAction(hpRatio, es) {
+        if (es.charged) {
+          es.charged = false;
+          return { action:'big_bang', damage: 28, speech: 'ぷるるるるっ！！' };
+        }
+        // フェーズ1: HP>65% 基本行動
+        if (hpRatio > 0.65) {
+          const r = Math.random();
+          if (r < 0.45) return { action:'attack',  damage: 8,  speech: 'ぷにっ！' };
+          if (r < 0.70) return { action:'bounce',  damage: 10, speech: 'ぷるる〜！' };
+          return          { action:'poison',  damage: 4,  speech: 'ジュルジュル...' };
+        }
+        // フェーズ2: HP35〜65% 溶解液・溜め覚える
+        if (hpRatio > 0.35) {
+          const r = Math.random();
+          if (r < 0.25) return { action:'attack',   damage: 8,  speech: 'ぷるっ！' };
+          if (r < 0.45) return { action:'dissolve', damage: 5,  speech: 'とろ〜り...' };
+          if (r < 0.65) return { action:'bounce',   damage: 12, speech: 'ぷにぷにっ！' };
+          if (r < 0.80) return { action:'poison',   damage: 4,  speech: 'ジュル〜！' };
+          es.charged = true;
+          return { action:'charge', damage: 0, speech: 'ぷるぷる...（溜め）' };
+        }
+        // フェーズ3: HP<35% 必死・分裂攻撃
+        const r = Math.random();
+        if (r < 0.30) return { action:'split_atk', damage: 9,  speech: 'ぷにぷに！！' };
+        if (r < 0.50) return { action:'dissolve',  damage: 5,  speech: 'とろとろ〜！' };
+        if (r < 0.68) return { action:'bounce',    damage: 14, speech: 'ぷるるるっ！！' };
+        if (r < 0.84) return { action:'poison',    damage: 6,  speech: 'どろどろ〜！' };
+        es.charged = true;
+        return { action:'charge', damage: 0, speech: '！！（必死に溜め）' };
+      }
+    }
+  },
+
+  // ==================== 🟡 中級：骸骨戦士 ====================
+  skeleton: {
+    id: 'skeleton', name: '骸骨戦士', rank: 'mid', rankLabel: '中級',
+    hp: 140, maxHp: 140, atk: 20, def: 12,
+    exp: 90, gold: [28, 60],
+    ascii: `
+    ╔══◈══╗
+    ║ ◉ ◉ ║
+    ╠══╩══╣
+   ╔╝╔═══╗╚╗
+   ║ ║   ║ ║
+   ║ ╚═══╝ ║
+   ╚╦═════╦╝
+    ╚═════╝
+  [SK-FRAME X]`,
+    asciiMid: `
+    ╔══◈══╗
+    ║ ◉/× ║
+    ╠══╩══╣
+   ╔╝╔═/═╗╚╗
+   ║ ║ ! ║ ║
+   ║ ╚═!=╝ ║
+   ╚╦═/═══╦╝
+    ╚══/══╝
+  [SK-DAMAGED]`,
+    asciiCrit: `
+    ╔══◈══╗
+    ║ X / × ║
+    ╠══╩══╣
+   ╔╝╔X═/╗╚╗
+   ║*║ !!║ ║
+   ║ ╚!!=╝*║
+   ╚╦!╱═══╦╝
+    ╚══!══╝*
+  [CRITICAL!!]`,
+    aiSystem: `あなたは古の骸骨戦士です。誇り高く死してもなお戦い続ける。
+セリフは「カタカタ...」「我が剣まだ朽ちず」など古風で哀愁がある。
+骨再生・二連撃・狂戦士化・呪い攻撃も使う。必ずJSON形式のみ：
+{"action":"attack|heavy|guard|bone_regen|double|debuff_atk|berserk","damage":数値,"message":"セリフ(15文字以内)"}`,
+    fallback: {
+      getAction(hpRatio, es) {
+        // フェーズ1: HP>60%  基本剣技
+        if (hpRatio > 0.60) {
+          const r = Math.random();
+          if (r < 0.38) return { action:'attack',     damage: 20, speech: 'カタカタ...ガッ！' };
+          if (r < 0.58) return { action:'heavy',      damage: 30, speech: '我が剣よ！' };
+          if (r < 0.72) return { action:'guard',      damage: 0,  speech: '防ぐ...' };
+          return          { action:'debuff_atk', damage: 0,  speech: '呪いよ...！' };
+        }
+        // フェーズ2: HP30〜60%  狂戦士化・二連撃・骨再生
+        if (hpRatio > 0.30) {
+          if (!es.berserked) {
+            es.berserked = true;
+            return { action:'berserk', damage: 0, speech: '骨まで燃え尽きろ！' };
+          }
+          const r = Math.random();
+          if (r < 0.28) return { action:'double',     damage: 18, speech: 'ガチャガチャ！' };
+          if (r < 0.48) return { action:'heavy',      damage: 34, speech: '死して尚戦う！' };
+          if (r < 0.62 && (es.regenUsed||0) < 2) {
+            es.regenUsed = (es.regenUsed||0)+1;
+            return { action:'bone_regen', damage: 0, speech: 'カラカラ...（再生）' };
+          }
+          if (r < 0.76) return { action:'attack',    damage: 22, speech: 'カタカタ...！' };
+          return          { action:'debuff_atk', damage: 0,  speech: 'うごめく呪い...' };
+        }
+        // フェーズ3: HP<30%  瀕死の猛攻・防御を捨てる
+        const r = Math.random();
+        if (r < 0.35) return { action:'double',    damage: 22, speech: '最後の力...！' };
+        if (r < 0.58) return { action:'heavy',     damage: 38, speech: '滅びよ...！！' };
+        if (r < 0.70 && (es.regenUsed||0) < 2) {
+          es.regenUsed = (es.regenUsed||0)+1;
+          return { action:'bone_regen', damage: 0, speech: '...まだだ...' };
+        }
+        if (r < 0.85) return { action:'attack',   damage: 24, speech: 'ガッガッガッ！' };
+        return { action:'debuff_atk', damage: 0, speech: '道連れに...！' };
+      }
+    }
+  },
+
+  // ==================== 🔴 上級：邪龍 ====================
+  dragonBoss: {
+    id: 'dragonBoss', name: '邪龍', rank: 'hard', rankLabel: '上級BOSS',
+    hp: 400, maxHp: 400, atk: 42, def: 22,
+    exp: 700, gold: [200, 500],
+    ascii: `
+     ╔▲╗  ╔▲╗
+    ╔╣█╠══╣█╠╗
+   ╔╝◈         ◈╚╗
+   ╠══╔══════╗══╣
+   ║  ║ MECH ║  ║
+   ╠══╚══════╝══╣
+   ╚╗   ╔══╗   ╔╝
+    ╚═══╝  ╚═══╝
+  [MECH-DRAGON]`,
+    asciiMid: `
+     ╔▲╗  ╔X╗
+    ╔╣█╠══╣!╠╗
+   ╔╝◈    /  ×╚╗
+   ╠══╔══/═══╗══╣
+   ║ *║ DMGD ║  ║
+   ╠══╚══!═══╝══╣
+   ╚╗   ╔/═╗   ╔╝
+    ╚═══╝  ╚═══╝
+  [MECH-DRGN!!]`,
+    asciiCrit: `
+     ╔▲╗  ╔X╗
+    ╔╣X╠!═╣!╠╗
+   ╔╝×    /  ×╚╗  ╠══╔══!══X═╗══╣
+   ║*!║CRITI!║* ║
+   ╠══╚!═════╝══╣
+   ╚╗* ╔/╳╗ * ╔╝
+   *╚!══╝  ╚!══╝
+  [SYSTEM:FAIL]`,
+    aiSystem: `あなたはダンジョン最奥の邪龍です。圧倒的な力を持ち人間を見下している。
+セリフは「塵芥めが...」「我が炎で灰にしてやろう」など威厳ある言葉。
+炎ブレス・咆哮・尻尾・自己再生・怒り強化も使う。必ずJSON形式のみ：
+{"action":"attack|breath|roar|tail|regen|rage|extinction","damage":数値,"message":"セリフ(15文字以内)"}`,
+    fallback: {
+      getAction(hpRatio, es) {
+        es.roarCD = Math.max(0, (es.roarCD||0) - 1);
+
+        // HP≤20%: 滅びの炎モード
+        if (hpRatio <= 0.20) {
+          const r = Math.random();
+          if (r < 0.38) return { action:'extinction', damage: 80, speech: '滅びろ...！！！' };
+          if (r < 0.58) return { action:'breath',     damage: 58, speech: '炎で灰にしてやる！' };
+          if (r < 0.70 && (es.regenUsed||0) < 2) {
+            es.regenUsed = (es.regenUsed||0)+1;
+            return { action:'regen', damage: 0, speech: '...再生する...' };
+          }
+          return { action:'tail', damage: 48, speech: 'グォォォ！！' };
+        }
+
+        // HP≤50%: 怒りフェーズ
+        if (hpRatio <= 0.50) {
+          if (!es.raged) {
+            es.raged = true;
+            return { action:'rage', damage: 0, speech: '…本気を見せてやろう' };
+          }
+          const r = Math.random();
+          if (r < 0.28) return { action:'breath',    damage: 56, speech: '我が炎を受けよ！' };
+          if (r < 0.46) return { action:'tail',      damage: 44, speech: 'グォォォ！' };
+          if (r < 0.60 && es.roarCD === 0) {
+            es.roarCD = 3;
+            return { action:'roar', damage: 0, speech: 'ガアアア！！' };
+          }
+          if (r < 0.72 && (es.regenUsed||0) < 2) {
+            es.regenUsed = (es.regenUsed||0)+1;
+            return { action:'regen', damage: 0, speech: '龍の回復力...' };
+          }
+          return { action:'attack', damage: 46, speech: '塵芥め！' };
+        }
+
+        // HP>50%: 様子見フェーズ
+        const r = Math.random();
+        if (r < 0.38) return { action:'attack', damage: 42, speech: '塵芥め...' };
+        if (r < 0.58) return { action:'breath', damage: 50, speech: '炎よ！' };
+        if (r < 0.74) return { action:'tail',   damage: 36, speech: '邪魔だ' };
+        if (r < 0.88 && es.roarCD === 0) {
+          es.roarCD = 3;
+          return { action:'roar', damage: 0, speech: 'グォォォ...' };
+        }
+        return { action:'attack', damage: 44, speech: '消え去れ！' };
+      }
+    }
+  }
+};
+
+// =============================================
+//  ダンジョン（3エリア）
+// =============================================
+const DUNGEON = [
+  {
+    name: '初級エリア',
+    desc: '🌿 草むした石畳の廊下。松明が弱く揺れている。<br>柔らかい鳴き声が聞こえてくる...',
+    enemy: 'slime',
+    rankClass: 'rank-easy',
+    exits: [{ label: '👾 スライムと戦う', action: 'fight' }, { label: '→ 次へ進む', action: 'next' }]
+  },
+  {
+    name: '中級エリア',
+    desc: '💀 骨が散乱する石の広間。古びた武器が壁に飾られている。<br>ガチャガチャと金属音が響いてくる...',
+    enemy: 'skeleton',
+    rankClass: 'rank-mid',
+    exits: [{ label: '💀 骸骨戦士と戦う', action: 'fight' }, { label: '→ 次へ進む', action: 'next' }]
+  },
+  {
+    name: '上級エリア〔最深部〕',
+    desc: '🔥 溶岩が流れる巨大な空洞。天井が見えないほど高い。<br>地響きとともに、巨大な影が現れた...',
+    enemy: 'dragonBoss',
+    rankClass: 'rank-hard',
+    exits: [{ label: '🐉 邪龍と戦う！', action: 'fight' }]
+  }
+];
+
+// =============================================
+//  アイテム
+// =============================================
+const ITEMS = {
+  potion:    { id:'potion',    name:'回復薬',     icon:'🧪', desc:'HP+30',     use:(p)=>{ const h=Math.min(30,p.maxHp-p.hp); p.hp+=h; return `HPが${h}回復！`; } },
+  elixir:    { id:'elixir',    name:'エリクサー', icon:'✨', desc:'HP全回復',  use:(p)=>{ const h=p.maxHp-p.hp; p.hp=p.maxHp; return `HPが全回復！(+${h})`; } },
+  mpPotion:  { id:'mpPotion',  name:'マナ薬',     icon:'💧', desc:'MP+20',     use:(p)=>{ const m=Math.min(20,p.maxMp-p.mp); p.mp+=m; return `MPが${m}回復！`; } },
+  bomb:      { id:'bomb',      name:'爆弾',       icon:'💣', desc:'敵に30ダメ', combat:true, use:(p,e)=>{ e.hp=Math.max(0,e.hp-30); return '爆発！敵に30ダメージ！'; } },
+  fireScroll:{ id:'fireScroll',name:'炎の巻物',   icon:'📜', desc:'敵に50ダメ', combat:true, use:(p,e)=>{ e.hp=Math.max(0,e.hp-50); return '炎が迸る！敵に50ダメージ！'; } },
+};
+const DROP_POOL = ['potion','potion','potion','mpPotion','bomb','elixir','fireScroll'];
+
+// =============================================
+//  ゲーム状態
+// =============================================
+const G = {
+  apiKey: '',
+  player: {},
+  dungeonIndex: 0,
+  battle: {
+    enemy: null,
+    active: false,
+    enemyState: {},   // 敵固有の状態（溜め・バーサーク・ガードなど）
+    playerStatus: {   // プレイヤーへの状態異常
+      poison: 0,      // 毒：残りターン数
+      stun: 0,        // スタン：残りターン数（行動不能）
+      defDown: 0,     // 防御ダウン：残りターン数
+      atkDown: 0,     // 攻撃ダウン：残りターン数
+      defDownVal: 0,  // DEF下降量
+      atkDownVal: 0,  // ATK下降量
+    },
+    enemyGuarding: false, // 敵の防御体勢フラグ
+  }
+};
+
+// =============================================
+//  初期化
+// =============================================
+window.onload = () => {
+  const saved = localStorage.getItem('dungeonAI_apiKey');
+  if (saved) document.getElementById('api-key-input').value = saved;
+  initGearSVG();
+  showScreen('title');
+};
+
+function resetPlayer(name) {
+  G.player = {
+    name: name || '冒険者',
+    hp: 100, maxHp: 100, mp: 50, maxMp: 50,
+    atk: 15, def: 8, level: 1, exp: 0, expNext: 100,
+    gold: 0,
+    items: [ {...ITEMS.potion}, {...ITEMS.potion}, {...ITEMS.mpPotion} ]
+  };
+}
+
+function startSinglePlayer() {
+  const key = document.getElementById('api-key-input').value.trim();
+  const name = document.getElementById('player-name-input').value.trim() || '冒険者';
+  G.apiKey = key;
+  if (key) localStorage.setItem('dungeonAI_apiKey', key);
+  resetPlayer(name);
+  G.dungeonIndex = 0;
+  gearTransition(() => {
+    showScreen('dungeon');
+    document.getElementById('game-header').style.display = 'flex';
+    updateDungeonUI();
+    loadDungeonRoom(0);
+  });
+}
+
+function goTitle() {
+  if (mpPeer) { mpPeer.destroy(); mpPeer = null; }
+  mpConn = null;
+  gearTransition(() => {
+    document.getElementById('game-header').style.display = 'none';
+    showScreen('title');
+  });
+}
+
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById('screen-' + id).classList.add('active');
+}
+
+// =============================================
+//  ダンジョン
+// =============================================
+function loadDungeonRoom(index) {
+  if (index >= DUNGEON.length) { showClear(); return; }
+  G.dungeonIndex = index;
+  const room = DUNGEON[index];
+  document.getElementById('dungeon-room-text').innerHTML =
+    `<span style="color:#aaaaff;font-size:12px;">${room.name}</span><br><br>${room.desc}`;
+  const exits = document.getElementById('room-exits');
+  exits.innerHTML = '';
+  room.exits.forEach(e => {
+    const btn = document.createElement('button');
+    btn.innerHTML = e.label;
+    if (e.action === 'fight') btn.className = 'danger';
+    btn.onclick = () => {
+      if (e.action === 'fight') startEncounter(room.enemy);
+      else loadDungeonRoom(index + 1);
+    };
+    exits.appendChild(btn);
+  });
+  updateDungeonUI();
+}
+
+function dungeonLog(msg) {
+  const log = document.getElementById('dungeon-log');
+  const div = document.createElement('div');
+  div.innerHTML = msg;
+  div.style.padding = '2px 0';
+  log.prepend(div);
+}
+
+// =============================================
+//  プレイヤーUI
+// =============================================
+function updateDungeonUI() {
+  const p = G.player;
+  document.getElementById('player-name-display').textContent = `${p.name} (Lv${p.level})`;
+  set('d-level', p.level); set('d-hp', p.hp); set('d-maxhp', p.maxHp);
+  set('d-mp', p.mp); set('d-maxmp', p.maxMp); set('d-exp', p.exp);
+  set('d-expnext', p.expNext); set('d-atk', p.atk); set('d-def', p.def); set('d-gold', p.gold);
+  pctBar('d-hp-bar', p.hp, p.maxHp); pctBar('d-mp-bar', p.mp, p.maxMp); pctBar('d-exp-bar', p.exp, p.expNext);
+  renderInventory();
+  updateHeaderStats();
+}
+
+function updateBattleUI() {
+  const p = G.player, e = G.battle.enemy;
+  set('b-hp', p.hp); set('b-maxhp', p.maxHp); set('b-mp', p.mp); set('b-maxmp', p.maxMp);
+  set('b-atk', p.atk); set('b-def', p.def); set('b-gold', p.gold);
+  pctBar('b-hp-bar', p.hp, p.maxHp); pctBar('b-mp-bar', p.mp, p.maxMp);
+  set('e-hp', e.hp); set('e-maxhp', e.maxHp); pctBar('e-hp-bar', e.hp, e.maxHp);
+  updateEnemyArt();
+  updateStatusEffectsUI();
+}
+
+function updateStatusEffectsUI() {
+  const ps = G.battle.playerStatus;
+  if (!ps) return;
+  const el = document.getElementById('b-status-effects');
+  if (!el) return;
+  const parts = [];
+  if (ps.poison > 0)   parts.push(`☠毒(${ps.poison})`);
+  if (ps.stun > 0)     parts.push(`💫スタン`);
+  if (ps.defDown > 0)  parts.push(`🛡DEF↓(${ps.defDown})`);
+  if (ps.atkDown > 0)  parts.push(`⚔ATK↓(${ps.atkDown})`);
+  el.textContent = parts.join(' ');
+  el.style.color = parts.length > 0 ? '#ff8844' : 'transparent';
+}
+
+function updateHeaderStats() {
+  const p = G.player;
+  document.getElementById('header-stats').textContent =
+    `${p.name} Lv${p.level}  HP:${p.hp}/${p.maxHp}  MP:${p.mp}/${p.maxMp}  💰${p.gold}`;
+}
+
+function renderInventory() {
+  const list = document.getElementById('inventory-list');
+  const p = G.player;
+  list.innerHTML = '';
+  set('inv-count', p.items.length);
+  if (!p.items.length) { list.innerHTML = '<li style="color:#555;font-size:11px;">アイテムなし</li>'; return; }
+  const groups = {};
+  p.items.forEach(i => groups[i.id] = (groups[i.id]||0)+1);
+  for (const [id, count] of Object.entries(groups)) {
+    const item = ITEMS[id];
+    const li = document.createElement('li');
+    li.innerHTML = `<span>${item.icon} ${item.name}</span><span style="color:#888">x${count}</span>`;
+    list.appendChild(li);
+  }
+}
+
+// =============================================
+//  バトル開始
+// =============================================
+function startEncounter(enemyId) {
+  const tmpl = ENEMIES[enemyId];
+  G.battle.enemy = { ...tmpl, hp: tmpl.hp, maxHp: tmpl.maxHp };
+  G.battle.active = true;
+  G.battle.enemyState = { charged: false, berserked: false, regenUsed: 0, roarCD: 0, raged: false };
+  G.battle.playerStatus = { poison:0, stun:0, defDown:0, atkDown:0, defDownVal:0, atkDownVal:0 };
+  G.battle.enemyGuarding = false;
+  gearTransition(() => { _doStartEncounterUI(tmpl); });
+}
+
+function _doStartEncounterUI(tmpl) {
+  showScreen('battle');
+  const rankEl = document.getElementById('enemy-rank-label');
+  rankEl.textContent = tmpl.rankLabel;
+  rankEl.className = 'rank-label ' + ({ easy:'rank-easy', mid:'rank-mid', hard:'rank-hard' }[tmpl.rank]);
+  const aiBadge = document.getElementById('ai-mode-badge');
+  aiBadge.innerHTML = G.apiKey
+    ? '<span class="ai-badge">🤖 AI</span>'
+    : '<span class="ai-badge" style="border-color:#555;color:#666;">📋 固定</span>';
+  document.getElementById('enemy-ascii').textContent = tmpl.ascii;
+  document.getElementById('enemy-name-display').textContent = tmpl.name;
+  const speechEl = document.getElementById('enemy-speech');
+  if (speechEl) speechEl.textContent = '...';
+  document.getElementById('b-player-name').textContent = G.player.name;
+  document.getElementById('battle-log').innerHTML = '';
+  document.getElementById('item-popup').style.display = 'none';
+  updateBattleUI();
+  updateStatusEffectsUI();
+  dialInit();
+  setActionsEnabled(true);
+  battleLog(`⚔ ${tmpl.name}が現れた！`, 'system');
+  if (tmpl.rank === 'hard') battleLog('💀 これはボスモンスターだ！全力で戦え！', 'special');
+}  // end _doStartEncounterUI
+
+// =============================================
+//  バトルUI
+// =============================================
+function battleLog(msg, type='system') {
+  const log = document.getElementById('battle-log');
+  const div = document.createElement('div');
+  div.className = 'log-line log-' + type;
+  div.innerHTML = msg;
+  log.appendChild(div);
+  log.scrollTop = log.scrollHeight;
+}
+
+function setActionsEnabled(on) {
+  dialEnabled = on;
+  const svg = document.getElementById('battle-dial');
+  if (svg) svg.style.opacity = on ? '1' : '0.35';
+}
+
+function closeItemPopup() {
+  document.getElementById('item-popup').style.display = 'none';
+}
+
+function openItemPopup() {
+  const p = G.player;
+  const list = document.getElementById('battle-item-list');
+  list.innerHTML = '';
+  if (!p.items.length) {
+    list.innerHTML = '<li style="color:#555;padding:8px;">アイテムなし</li>';
+  } else {
+    const groups = {};
+    p.items.forEach(i => { groups[i.id] = groups[i.id] || []; groups[i.id].push(1); });
+    for (const [id, arr] of Object.entries(groups)) {
+      const item = ITEMS[id];
+      const li = document.createElement('li');
+      const btn = document.createElement('button');
+      btn.textContent = '使う';
+      btn.style.padding = '3px 8px';
+      btn.onclick = () => { closeItemPopup(); useItemInBattle(id); };
+      li.innerHTML = `<span>${item.icon} ${item.name} <span style="color:#555;font-size:10px;">${item.desc}</span></span>`;
+      li.appendChild(btn);
+      list.appendChild(li);
+    }
+  }
+  document.getElementById('item-popup').style.display = 'flex';
+}
+
+// 後方互換のため残す（MP不足チェックで使う）
+function closeSubMenu() { closeItemPopup(); }
+
+function useItemInBattle(itemId) {
+  const p = G.player, e = G.battle.enemy;
+  const idx = p.items.findIndex(i => i.id === itemId);
+  if (idx === -1) return;
+  const item = ITEMS[itemId];
+  p.items.splice(idx, 1);
+  const msg = item.combat ? item.use(p, e) : item.use(p);
+  battleLog(`🎒 ${item.icon}${item.name}を使った！ ${msg}`, 'item');
+  closeSubMenu();
+  updateBattleUI();
+  if (e.hp <= 0) { enemyDied(); return; }
+  setActionsEnabled(false);
+  setTimeout(() => enemyTurn(), 800);
+}
+
+// =============================================
+//  プレイヤーアクション
+// =============================================
+async function battleAction(action) {
+  if (!G.battle.active || !dialEnabled) return;
+  dialEnabled = false;           // 即座にロック（スパム防止）
+  setActionsEnabled(false);
+  const p = G.player, e = G.battle.enemy;
+  const ps = G.battle.playerStatus;
+
+  // ── ターン開始：状態異常の処理 ──
+  // スタン：行動不能
+  if (ps.stun > 0) {
+    ps.stun--;
+    battleLog(`💫 ${p.name}はスタンして動けない！`, 'system');
+    updateBattleUI();
+    await enemyTurn();
+    return;
+  }
+  // 毒ダメージ
+  if (ps.poison > 0) {
+    const poisonDmg = 6;
+    p.hp = Math.max(0, p.hp - poisonDmg);
+    ps.poison--;
+    battleLog(`☠ 毒！${p.name}に${poisonDmg}ダメージ！（残り${ps.poison}ターン）`, 'enemy');
+    updateBattleUI();
+    if (p.hp <= 0) { gameOver(); return; }
+  }
+
+  if (action === 'flee') {
+    if (Math.random() < 0.5) {
+      battleLog('💨 逃げた！', 'system');
+      G.battle.active = false;
+      setTimeout(() => { showScreen('dungeon'); updateDungeonUI(); }, 800);
+    } else {
+      battleLog('💨 逃げられなかった！', 'system');
+      setTimeout(() => enemyTurn(), 800);
+    }
+    return;
+  }
+
+  // 有効ATK（ATKダウン中は減少）
+  const effAtk = Math.max(1, p.atk - (ps.atkDown > 0 ? ps.atkDownVal : 0));
+  const isGuarding = G.battle.enemyGuarding;
+
+  // アイテムメニュー
+  if (action === 'item') {
+    openItemPopup();
+    setActionsEnabled(true);
+    return;
+  }
+
+  let dmg = 0, mpCost = 0;
+  if (action === 'attack') {
+    dmg = calcDmg(effAtk, e.def);
+    if (isGuarding) { dmg = Math.floor(dmg * 0.4); G.battle.enemyGuarding = false; battleLog(`🛡 ${e.name}は防御体勢！ダメージ激減！`, 'system'); }
+    battleLog(`⚔ ${p.name}の攻撃！ ${e.name}に${dmg}ダメージ！`, 'player');
+  } else if (action === 'skill_fire') {
+    mpCost = 10;
+    if (p.mp < mpCost) { battleLog('MPが足りない！(ファイア:10MP)', 'system'); setActionsEnabled(true); return; }
+    dmg = calcDmg(effAtk * 1.5, e.def * 0.5);
+    if (isGuarding) { dmg = Math.floor(dmg * 0.4); G.battle.enemyGuarding = false; }
+    battleLog(`🔥 ファイア！ ${e.name}に${dmg}ダメージ！`, 'skill');
+  } else if (action === 'skill_thunder') {
+    mpCost = 15;
+    if (p.mp < mpCost) { battleLog('MPが足りない！(サンダー:15MP)', 'system'); setActionsEnabled(true); return; }
+    dmg = calcDmg(effAtk * 2, e.def * 0.3);
+    if (isGuarding) { dmg = Math.floor(dmg * 0.7); G.battle.enemyGuarding = false; }
+    battleLog(`⚡ サンダー！ ${e.name}に${dmg}ダメージ！（ガード貫通）`, 'skill');
+  } else if (action === 'skill_heal') {
+    mpCost = 20;
+    if (p.mp < mpCost) { battleLog('MPが足りない！(ヒール:20MP)', 'system'); setActionsEnabled(true); return; }
+    const h = Math.min(40, p.maxHp - p.hp);
+    p.hp += h; p.mp -= mpCost;
+    if (ps.poison > 0) { ps.poison = Math.max(0, ps.poison - 1); battleLog(`💚 ヒール！ HPが${h}回復！毒も1ターン軽減！`, 'heal'); }
+    else battleLog(`💚 ヒール！ HPが${h}回復した！`, 'heal');
+    updateBattleUI();
+    setTimeout(() => enemyTurn(), 800);
+    return;
+  } else if (action === 'skill_blizzard') {
+    mpCost = 25;
+    if (p.mp < mpCost) { battleLog('MPが足りない！(ブリザド:25MP)', 'system'); setActionsEnabled(true); return; }
+    dmg = calcDmg(effAtk * 2.5, e.def * 0.2);
+    if (isGuarding) { dmg = Math.floor(dmg * 0.4); G.battle.enemyGuarding = false; }
+    battleLog(`❄️ ブリザド！ ${e.name}に${dmg}ダメージ！`, 'skill');
+  } else if (action === 'skill_mega') {
+    mpCost = 20;
+    if (p.mp < mpCost) { battleLog('MPが足りない！(メガ斬り:20MP)', 'system'); setActionsEnabled(true); return; }
+    dmg = calcDmg(effAtk * 3, e.def);
+    if (isGuarding) { dmg = Math.floor(dmg * 0.4); G.battle.enemyGuarding = false; }
+    battleLog(`💥 メガ斬り！ ${e.name}に${dmg}の大ダメージ！`, 'skill');
+  }
+
+  p.mp -= mpCost;
+  const wasCrit = dmg >= Math.floor(p.atk * 2.2);
+  e.hp = Math.max(0, e.hp - dmg);
+  updateBattleUI();
+  enemyHitEffect(dmg, wasCrit);
+  if (e.hp <= 0) { enemyDied(); return; }
+  await enemyTurn();
+}
+
+// =============================================
+//  敵のターン
+// =============================================
+async function enemyTurn() {
+  const e = G.battle.enemy, p = G.player;
+  const ps = G.battle.playerStatus;
+  const es = G.battle.enemyState;
+
+  document.getElementById('ai-thinking').style.display = G.apiKey ? 'block' : 'none';
+  let result;
+  if (G.apiKey) {
+    result = await callEnemyAI(e, p);
+  } else {
+    result = e.fallback.getAction(e.hp / e.maxHp, G.battle.enemyState);
+    await delay(650);
+  }
+  document.getElementById('ai-thinking').style.display = 'none';
+
+  const action = result.action;
+  const baseDmg = result.damage || e.atk;
+  const speech = result.speech || result.message || '...';
+  document.getElementById('enemy-speech').textContent = speech;
+
+  // 有効DEF（プレイヤーのDEF、ダウン中は減少）
+  const effDef = Math.max(0, p.def - (ps.defDown > 0 ? ps.defDownVal : 0));
+  // 防御体勢中かどうか
+  const wasGuarding = G.battle.enemyGuarding;
+  G.battle.enemyGuarding = false;
+
+  let realDmg = 0;
+
+  switch(action) {
+    // ── 通常攻撃 ──
+    case 'attack':
+      realDmg = Math.max(1, baseDmg - Math.floor(effDef / 2));
+      p.hp = Math.max(0, p.hp - realDmg);
+      battleLog(`💥 ${e.name}の攻撃！ ${p.name}に${realDmg}ダメージ！`, 'enemy');
+      break;
+
+    // ── スライム体当たり ──
+    case 'bounce':
+      realDmg = Math.max(1, baseDmg - Math.floor(effDef / 2));
+      p.hp = Math.max(0, p.hp - realDmg);
+      battleLog(`💦 ${e.name}のぶつかり！ ${p.name}に${realDmg}ダメージ！`, 'enemy');
+      break;
+
+    // ── 溜め予告（次ターンbig_bang） ──
+    case 'charge':
+      es.charged = true;
+      battleLog(`⚡ ${e.name}が力を溜め始めた！次のターンに注意！`, 'special');
+      break;
+
+    // ── 大爆発 ──
+    case 'big_bang':
+      realDmg = Math.max(1, baseDmg - Math.floor(effDef / 4));
+      p.hp = Math.max(0, p.hp - realDmg);
+      battleLog(`💥💥 ${e.name}の大爆発！ ${p.name}に${realDmg}の大ダメージ！！`, 'special');
+      break;
+
+    // ── 毒液付与 ──
+    case 'poison':
+      ps.poison = Math.max(ps.poison, 3);
+      realDmg = Math.max(1, Math.floor(baseDmg * 0.5) - Math.floor(effDef / 3));
+      if (realDmg > 0) p.hp = Math.max(0, p.hp - realDmg);
+      battleLog(`☠ ${e.name}の毒液！${p.name}は毒状態に！(3ターン HP-6)${realDmg>0?' '+realDmg+'ダメージも受けた！':''}`, 'special');
+      break;
+
+    // ── 溶解液：DEFダウン ──
+    case 'dissolve':
+      ps.defDown = 2; ps.defDownVal = 6;
+      realDmg = Math.max(1, Math.floor(baseDmg * 0.4) - Math.floor(effDef / 3));
+      if (realDmg > 0) p.hp = Math.max(0, p.hp - realDmg);
+      battleLog(`🧪 ${e.name}の溶解液！${p.name}のDEFが2ターン-6！${realDmg>0?' '+realDmg+'ダメージ！':''}`, 'special');
+      break;
+
+    // ── 分裂攻撃：2ヒット ──
+    case 'split_atk': {
+      const d1 = Math.max(1, Math.floor(baseDmg * 0.7) - Math.floor(effDef / 2));
+      const d2 = Math.max(1, Math.floor(baseDmg * 0.7) - Math.floor(effDef / 2));
+      p.hp = Math.max(0, p.hp - d1 - d2);
+      realDmg = d1 + d2;
+      battleLog(`💦💦 ${e.name}の分裂攻撃！ ${d1}+${d2}=${realDmg}ダメージ！`, 'special');
+      break;
+    }
+
+    // ── 重撃 ──
+    case 'heavy':
+      realDmg = Math.max(1, baseDmg - Math.floor(effDef / 3));
+      p.hp = Math.max(0, p.hp - realDmg);
+      battleLog(`⚔⚔ ${e.name}の重撃！ ${p.name}に${realDmg}の強攻撃！`, 'enemy');
+      break;
+
+    // ── 防御体勢（次の被ダメ60%カット） ──
+    case 'guard':
+      G.battle.enemyGuarding = true;
+      battleLog(`🛡 ${e.name}が守りを固めた！次の攻撃を大幅軽減する！`, 'enemy');
+      break;
+
+    // ── 骨再生：自己HP回復 ──
+    case 'bone_regen': {
+      const healed = Math.min(30, e.maxHp - e.hp);
+      e.hp += healed;
+      battleLog(`🦴 ${e.name}が骨を再生！HPが${healed}回復した！`, 'enemy');
+      break;
+    }
+
+    // ── 二連撃 ──
+    case 'double': {
+      const d1 = Math.max(1, Math.floor(baseDmg * 0.8) - Math.floor(effDef / 2));
+      const d2 = Math.max(1, Math.floor(baseDmg * 0.8) - Math.floor(effDef / 2));
+      p.hp = Math.max(0, p.hp - d1 - d2);
+      realDmg = d1 + d2;
+      battleLog(`⚡⚡ ${e.name}の二連撃！ ${d1}+${d2}=${realDmg}ダメージ！`, 'enemy');
+      break;
+    }
+
+    // ── ATKダウン付与 ──
+    case 'debuff_atk':
+      ps.atkDown = 2; ps.atkDownVal = 6;
+      battleLog(`💀 ${e.name}の呪い！${p.name}のATKが2ターン-6！`, 'special');
+      break;
+
+    // ── 狂戦士化：自ATK上昇 ──
+    case 'berserk':
+      e.atk += 12;
+      battleLog(`🔥 ${e.name}が狂戦士化！ATKが12上昇した！（${e.atk}）`, 'special');
+      break;
+
+    // ── 咆哮：スタン ──
+    case 'roar':
+      ps.stun = 1;
+      realDmg = Math.max(0, Math.floor(baseDmg * 0.3) - Math.floor(effDef / 4));
+      if (realDmg > 0) p.hp = Math.max(0, p.hp - realDmg);
+      battleLog(`📣 ${e.name}の咆哮！${p.name}はスタンした！（次ターン行動不能）${realDmg>0?' '+realDmg+'ダメージ！':''}`, 'special');
+      break;
+
+    // ── 炎ブレス ──
+    case 'breath':
+      realDmg = Math.max(1, baseDmg - Math.floor(effDef / 4));
+      p.hp = Math.max(0, p.hp - realDmg);
+      battleLog(`🔥 ${e.name}の炎ブレス！ ${p.name}に${realDmg}の灼熱ダメージ！`, 'special');
+      break;
+
+    // ── 尻尾：DEFダウン ──
+    case 'tail':
+      realDmg = Math.max(1, baseDmg - Math.floor(effDef / 2));
+      p.hp = Math.max(0, p.hp - realDmg);
+      ps.defDown = 2; ps.defDownVal = 8;
+      battleLog(`🐉 ${e.name}の尻尾薙ぎ！ ${realDmg}ダメージ＆${p.name}のDEFが2ターン-8！`, 'special');
+      break;
+
+    // ── 自己HP回復（邪龍） ──
+    case 'regen': {
+      const healed = Math.min(50, e.maxHp - e.hp);
+      e.hp += healed;
+      battleLog(`✨ ${e.name}が龍の力で回復！HPが${healed}回復した！`, 'enemy');
+      break;
+    }
+
+    // ── 龍の怒り：ATK上昇・DEF低下 ──
+    case 'rage':
+      e.atk += 15; e.def = Math.max(0, e.def - 8);
+      battleLog(`💥 ${e.name}が龍の怒りを解放！ATK+15・DEF-8！（ATK:${e.atk}）`, 'special');
+      break;
+
+    // ── 滅びの炎（HP≤20%の切り札） ──
+    case 'extinction':
+      realDmg = Math.max(1, baseDmg - Math.floor(effDef / 6));
+      p.hp = Math.max(0, p.hp - realDmg);
+      battleLog(`☄️ ${e.name}の滅びの炎！！ ${p.name}に${realDmg}の壊滅的ダメージ！！！`, 'special');
+      break;
+
+    default:
+      realDmg = Math.max(1, baseDmg - Math.floor(effDef / 2));
+      p.hp = Math.max(0, p.hp - realDmg);
+      battleLog(`💥 ${e.name}の行動！ ${p.name}に${realDmg}ダメージ！`, 'enemy');
+  }
+
+  // 状態異常カウントダウン
+  if (ps.defDown > 0) { ps.defDown--; if(ps.defDown===0) battleLog(`${p.name}のDEFが元に戻った！`, 'system'); }
+  if (ps.atkDown > 0) { ps.atkDown--; if(ps.atkDown===0) battleLog(`${p.name}のATKが元に戻った！`, 'system'); }
+
+  if (realDmg > 0) playerHitEffect(realDmg);
+  updateBattleUI();
+  updateEnemyArt();
+  updateHeaderStats();
+  if (p.hp <= 0) { gameOver(); return; }
+  setActionsEnabled(true);
+}
+
+async function callEnemyAI(enemy, player) {
+  const userPrompt = `現在状況：
+- 敵(${enemy.name}): HP ${enemy.hp}/${enemy.maxHp} (残り${Math.round(enemy.hp/enemy.maxHp*100)}%)
+- プレイヤー(${player.name}): HP ${player.hp}/${player.maxHp}
+次の行動をJSONで返せ。`;
+  try {
+    const resp = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': G.apiKey,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true'
+      },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-6',
+        max_tokens: 120,
+        system: enemy.aiSystem,
+        messages: [{ role: 'user', content: userPrompt }]
+      })
+    });
+    const data = await resp.json();
+    if (data.content && data.content[0]) {
+      const text = data.content[0].text.trim();
+      const m = text.match(/\{[\s\S]*\}/);
+      if (m) {
+        const parsed = JSON.parse(m[0]);
+        return { ...parsed, speech: parsed.message };
+      }
+    }
+  } catch(err) { console.error('AI error:', err); }
+  // AI失敗時もフォールバック
+  return enemy.fallback.getAction(enemy.hp / enemy.maxHp, G.battle.enemyState);
+}
+
+// =============================================
+//  勝敗
+// =============================================
+function enemyDied() {
+  G.battle.active = false;
+  const e = G.battle.enemy, p = G.player;
+  battleLog(`🎉 ${e.name}を倒した！`, 'system');
+  p.exp += e.exp;
+  battleLog(`✨ EXP +${e.exp}`, 'item');
+  const g = randInt(e.gold[0], e.gold[1]);
+  p.gold += g;
+  battleLog(`💰 ${g}ゴールド獲得！`, 'item');
+  if (Math.random() < 0.6) {
+    const id = DROP_POOL[Math.floor(Math.random()*DROP_POOL.length)];
+    p.items.push({...ITEMS[id]});
+    battleLog(`${ITEMS[id].icon} ${ITEMS[id].name}を手に入れた！`, 'item');
+  }
+  while (p.exp >= p.expNext) {
+    p.exp -= p.expNext;
+    p.level++;
+    p.expNext = Math.floor(p.expNext * 1.5);
+    p.maxHp += 20; p.hp = p.maxHp;
+    p.maxMp += 10; p.mp = p.maxMp;
+    p.atk += 5; p.def += 2;
+    battleLog(`⬆ レベルアップ！ Lv${p.level}！ HP・MP全回復！`, 'special');
+  }
+  setActionsEnabled(false);
+  // 崩壊エフェクト → 歯車トランジション → 次画面
+  enemyDeathEffect(() => {
+    if (e.id === 'dragonBoss') {
+      gearTransition(() => showClear());
+    } else {
+      gearTransition(() => {
+        showScreen('dungeon');
+        updateDungeonUI();
+        loadDungeonRoom(G.dungeonIndex + 1);
+      });
+    }
+  });
+}
+
+function gameOver() {
+  G.battle.active = false;
+  const p = G.player;
+  gearTransition(() => {
+    document.getElementById('gameover-stats').innerHTML =
+      `${p.name} Lv${p.level}  |  💰${p.gold}ゴールド`;
+    showScreen('gameover');
+  });
+}
+
+function showClear() {
+  const p = G.player;
+  document.getElementById('clear-stats').innerHTML =
+    `${p.name} Lv${p.level}  |  💰${p.gold}ゴールド  |  邪龍討伐！`;
+  showScreen('clear');
+}
+
+// =============================================
+//  マルチプレイヤー
+// =============================================
+let mpPeer = null, mpConn = null, mpIsHost = false;
+let mpMyState = {}, mpOppState = {}, mpMyTurn = false, mpBattleActive = false;
+
+function showMultiplayerLobby() {
+  const key = document.getElementById('api-key-input').value.trim();
+  const name = document.getElementById('player-name-input').value.trim() || '冒険者';
+  G.apiKey = key;
+  if (key) localStorage.setItem('dungeonAI_apiKey', key);
+  resetPlayer(name);
+  showScreen('mp-lobby');
+}
+
+function mpCreateRoom() {
+  if (mpPeer) mpPeer.destroy();
+  const code = Array.from({length:6},()=>'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'[Math.floor(Math.random()*33)]).join('');
+  mpIsHost = true;
+  mpPeer = new Peer('DNGN_' + code);
+  mpPeer.on('open', () => {
+    document.getElementById('room-code-display').style.display = 'block';
+    document.getElementById('room-code-text').textContent = code;
+  });
+  mpPeer.on('connection', conn => {
+    mpConn = conn;
+    setupMpConn();
+    mpSend({ type:'hello', name:G.player.name, stats:myStats() });
+  });
+  mpPeer.on('error', err => { document.getElementById('mp-host-status').textContent = 'エラー: '+err.type; });
+}
+
+function mpJoinRoom() {
+  const code = document.getElementById('join-code-input').value.trim().toUpperCase();
+  if (!code) { alert('コードを入力してください'); return; }
+  if (mpPeer) mpPeer.destroy();
+  mpIsHost = false;
+  mpPeer = new Peer();
+  mpPeer.on('open', () => {
+    document.getElementById('mp-guest-status').textContent = '接続中...';
+    mpConn = mpPeer.connect('DNGN_' + code);
+    setupMpConn();
+    mpConn.on('open', () => {
+      document.getElementById('mp-guest-status').textContent = '接続完了！';
+      mpSend({ type:'hello', name:G.player.name, stats:myStats() });
+    });
+  });
+  mpPeer.on('error', err => { document.getElementById('mp-guest-status').textContent = 'エラー: '+err.type; });
+}
+
+function setupMpConn() {
+  mpConn.on('data', raw => handleMpData(JSON.parse(raw)));
+  mpConn.on('close', () => { mpLog('⚠ 相手が切断しました','system'); mpBattleActive=false; });
+}
+
+function mpSend(data) { if (mpConn && mpConn.open) mpConn.send(JSON.stringify(data)); }
+function myStats() { const p=G.player; return {hp:p.hp,maxHp:p.maxHp,mp:p.mp,maxMp:p.maxMp,atk:p.atk,def:p.def,level:p.level}; }
+
+function handleMpData(data) {
+  if (data.type === 'hello') {
+    mpOppState = { name: data.name, ...data.stats };
+    startMpBattle();
+  } else if (data.type === 'action') {
+    handleMpOppAction(data);
+  } else if (data.type === 'sync') {
+    mpOppState = { ...mpOppState, ...data.stats };
+    updateMpUI();
+  }
+}
+
+function startMpBattle() {
+  mpMyState = { name:G.player.name, ...myStats() };
+  mpBattleActive = true;
+  mpMyTurn = mpIsHost;
+  showScreen('mp-battle');
+  document.getElementById('game-header').style.display = 'flex';
+  document.getElementById('mp-role-badge').textContent = mpIsHost ? '🏠 ホスト' : '🚪 ゲスト';
+  document.getElementById('mp-my-name').textContent = mpMyState.name;
+  document.getElementById('mp-opp-name').textContent = mpOppState.name;
+  document.getElementById('mp-result').style.display = 'none';
+  document.getElementById('mp-battle-log').innerHTML = '';
+  updateMpUI();
+  mpLog(`⚔ バトル開始！ ${mpMyState.name} VS ${mpOppState.name}`, 'system');
+  updateMpTurn();
+  setMpEnabled(mpMyTurn);
+}
+
+function updateMpUI() {
+  const my=mpMyState, op=mpOppState;
+  set('mp-my-hp',my.hp); set('mp-my-maxhp',my.maxHp);
+  set('mp-my-mp',my.mp); set('mp-my-maxmp',my.maxMp);
+  pctBar('mp-my-hp-bar',my.hp,my.maxHp); pctBar('mp-my-mp-bar',my.mp,my.maxMp);
+  set('mp-opp-hp',op.hp||'?'); set('mp-opp-maxhp',op.maxHp||'?');
+  set('mp-opp-mp',op.mp||'?'); set('mp-opp-maxmp',op.maxMp||'?');
+  if (op.maxHp) pctBar('mp-opp-hp-bar',op.hp,op.maxHp);
+  if (op.maxMp) pctBar('mp-opp-mp-bar',op.mp,op.maxMp);
+}
+
+function updateMpTurn() {
+  document.getElementById('mp-turn-indicator').innerHTML = mpMyTurn
+    ? '<span style="color:#44ff88">▶ あなたのターン</span>'
+    : '<span style="color:#ff8888">⏳ 相手のターン</span>';
+}
+
+function setMpEnabled(on) {
+  ['mp-btn-attack','mp-btn-skill','mp-btn-heal','mp-btn-surr'].forEach(id => {
+    const b=document.getElementById(id); if(b) b.disabled=!on;
+  });
+}
+
+function mpOpenSkill() {
+  document.getElementById('mp-action-buttons').style.display='none';
+  document.getElementById('mp-skill-menu').style.display='grid';
+}
+function mpCloseSkill() {
+  document.getElementById('mp-action-buttons').style.display='grid';
+  document.getElementById('mp-skill-menu').style.display='none';
+}
+
+function mpLog(msg, type='system') {
+  const log=document.getElementById('mp-battle-log');
+  const div=document.createElement('div');
+  div.className='log-line log-'+type;
+  div.innerHTML=msg;
+  log.appendChild(div);
+  log.scrollTop=log.scrollHeight;
+}
+
+async function mpAction(action) {
+  if (!mpMyTurn || !mpBattleActive) return;
+  setMpEnabled(false); mpCloseSkill();
+  const my=mpMyState, op=mpOppState;
+
+  if (action==='surrender') {
+    mpSend({type:'action',action:'surrender'});
+    mpLog(`🏳 ${my.name}が降参した！`,'system');
+    mpEndBattle(false); return;
+  }
+  if (action==='heal') {
+    if (my.mp < 20) { mpLog('MPが足りない！','system'); setMpEnabled(true); return; }
+    const h=Math.min(40,my.maxHp-my.hp); my.hp+=h; my.mp-=20;
+    mpLog(`💚 ${my.name}はHPを${h}回復した！`,'heal');
+    mpSend({type:'action',action:'heal',damage:0});
+    mpSend({type:'sync',stats:my});
+    updateMpUI(); mpMyTurn=false; updateMpTurn(); return;
+  }
+
+  let dmg=0, mpCost=0;
+  if (action==='attack')         { dmg=calcDmg(my.atk,op.def||8); }
+  else if (action==='skill_fire')    { mpCost=10; if(my.mp<mpCost){mpLog('MPが足りない!','system');setMpEnabled(true);return;} dmg=calcDmg(my.atk*1.5,(op.def||8)*0.5); }
+  else if (action==='skill_thunder') { mpCost=15; if(my.mp<mpCost){mpLog('MPが足りない!','system');setMpEnabled(true);return;} dmg=calcDmg(my.atk*2,(op.def||8)*0.3); }
+  else if (action==='skill_blizzard'){ mpCost=25; if(my.mp<mpCost){mpLog('MPが足りない!','system');setMpEnabled(true);return;} dmg=calcDmg(my.atk*2.5,(op.def||8)*0.2); }
+  else if (action==='skill_mega')    { mpCost=20; if(my.mp<mpCost){mpLog('MPが足りない!','system');setMpEnabled(true);return;} dmg=calcDmg(my.atk*3,op.def||8); }
+
+  my.mp -= mpCost;
+  op.hp = Math.max(0, op.hp - dmg);
+  const labels = {attack:'⚔ 攻撃',skill_fire:'🔥 ファイア',skill_thunder:'⚡ サンダー',skill_blizzard:'❄️ ブリザド',skill_mega:'💥 メガ斬り'};
+  mpLog(`${labels[action] || '⚔'} → ${op.name}に${dmg}ダメージ！`,'player');
+  mpSend({type:'action',action,damage:dmg});
+  mpSend({type:'sync',stats:my});
+  updateMpUI();
+
+  if (op.hp <= 0) { mpEndBattle(true); return; }
+  mpMyTurn=false; updateMpTurn();
+}
+
+function handleMpOppAction(data) {
+  const my=mpMyState, op=mpOppState;
+  if (data.action==='surrender') { mpLog(`🏳 ${op.name}が降参した！`,'enemy'); mpEndBattle(true); return; }
+  if (data.action==='heal')      { mpLog(`💚 ${op.name}がHPを回復した！`,'enemy'); }
+  else {
+    const realDmg = Math.max(1,(data.damage||10)-Math.floor((my.def||8)/2));
+    my.hp = Math.max(0,my.hp-realDmg);
+    mpLog(`💥 ${op.name}の攻撃！ ${my.name}に${realDmg}ダメージ！`,'enemy');
+    if (my.hp<=0) { mpEndBattle(false); return; }
+  }
+  updateMpUI(); mpMyTurn=true; updateMpTurn(); setMpEnabled(true);
+}
+
+function mpEndBattle(won) {
+  mpBattleActive=false; setMpEnabled(false);
+  const el=document.getElementById('mp-result');
+  el.style.display='block';
+  document.getElementById('mp-result-text').innerHTML = won
+    ? '<span style="color:#ffdd44;text-shadow:0 0 15px #ffaa00;">🏆 勝利！</span>'
+    : '<span style="color:#ff4444;text-shadow:0 0 15px #ff0000;">💀 敗北...</span>';
+  mpLog(won ? '🏆 あなたの勝利！' : '💀 あなたの敗北...', won ? 'special' : 'enemy');
+}
+
+// =============================================
+//  ダイヤルシステム
+// =============================================
+
+// 8方向のアクション定義（角度は上=−90°から時計回り）
+const DIAL_ACTIONS = [
+  { id:'attack',         label:'攻撃',     icon:'⚔',  angle:-90,  mpCost:0,  col:'#4455ff' },
+  { id:'skill_fire',     label:'ファイア', icon:'🔥', angle:-45,  mpCost:10, col:'#ff5522' },
+  { id:'skill_thunder',  label:'サンダー', icon:'⚡', angle:0,    mpCost:15, col:'#ffdd22' },
+  { id:'skill_blizzard', label:'ブリザド', icon:'❄',  angle:45,   mpCost:25, col:'#22aaff' },
+  { id:'skill_heal',     label:'ヒール',   icon:'♥',  angle:90,   mpCost:20, col:'#22cc66' },
+  { id:'item',           label:'アイテム', icon:'◈',  angle:135,  mpCost:0,  col:'#ffaa22' },
+  { id:'flee',           label:'逃げる',   icon:'↩',  angle:180,  mpCost:0,  col:'#666688' },
+  { id:'skill_mega',     label:'メガ斬り', icon:'✦',  angle:-135, mpCost:20, col:'#cc44ff' },
+];
+
+let dialEnabled = true;
+let dialActive = false;
+let dialSelIdx = -1;
+let dialOriginX = 0, dialOriginY = 0;
+const DIAL_DEAD_ZONE = 22; // この距離以上ドラッグで方向確定
+
+function dialInit() {
+  const svg = document.getElementById('battle-dial');
+  if (!svg) return;
+  svg.innerHTML = dialBuildSVG();
+  // イベント登録（一度だけ）
+  if (!svg._dialBound) {
+    svg._dialBound = true;
+    svg.addEventListener('mousedown',  dialOnDown);
+    svg.addEventListener('touchstart', dialOnTouch, { passive: false });
+    window.addEventListener('mousemove',  dialOnMove);
+    window.addEventListener('mouseup',   dialOnUp);
+    window.addEventListener('touchmove', dialOnTouchMove, { passive: false });
+    window.addEventListener('touchend',  dialOnTouchEnd);
+  }
+  dialSelIdx = -1;
+  dialPreview(-1);
+}
+
+// ── SVG構築 ──────────────────────────────────
+function dialBuildSVG() {
+  const RO = 126, RS = 115, RI = 48, RL = 82;
+  let s = '';
+
+  // 外枠・背景
+  s += `<circle r="${RO}" fill="#07070f" stroke="#1a1a33" stroke-width="2.5"/>`;
+
+  // 目盛り（72本、5°ごと）
+  for (let i = 0; i < 72; i++) {
+    const a = i * 5 * Math.PI / 180;
+    const major = i % 9 === 0;
+    const r1 = major ? RO - 16 : RO - 8;
+    const x1 = r1 * Math.cos(a), y1 = r1 * Math.sin(a);
+    const x2 = (RO - 2) * Math.cos(a), y2 = (RO - 2) * Math.sin(a);
+    s += `<line x1="${fx(x1)}" y1="${fx(y1)}" x2="${fx(x2)}" y2="${fx(y2)}"
+      stroke="${major ? '#3a3a88' : '#1a1a33'}" stroke-width="${major ? 2 : 0.8}"/>`;
+  }
+
+  // 8セグメント（ドーナツ型扇形）
+  DIAL_ACTIONS.forEach((act, i) => {
+    const sa = (act.angle - 22.5) * Math.PI / 180;
+    const ea = (act.angle + 22.5) * Math.PI / 180;
+    const path = dialArcPath(RI, RS, sa, ea);
+    s += `<path id="dseg${i}" d="${path}"
+      fill="#0c0c1c" stroke="#181830" stroke-width="1.2"
+      onclick="dialTapSegment(${i})"
+      style="cursor:pointer;transition:fill 0.12s,filter 0.12s"/>`;
+  });
+
+  // セグメント境界線
+  for (let i = 0; i < 8; i++) {
+    const a = (-90 + i * 45 - 22.5) * Math.PI / 180;
+    const x1 = RI * Math.cos(a), y1 = RI * Math.sin(a);
+    const x2 = RS * Math.cos(a), y2 = RS * Math.sin(a);
+    s += `<line x1="${fx(x1)}" y1="${fx(y1)}" x2="${fx(x2)}" y2="${fx(y2)}"
+      stroke="#0f0f22" stroke-width="1.5"/>`;
+  }
+
+  // ラベル（アイコン＋名前＋MP）
+  DIAL_ACTIONS.forEach((act, i) => {
+    const rad = act.angle * Math.PI / 180;
+    const lx = fx(RL * Math.cos(rad));
+    const ly = fx(RL * Math.sin(rad));
+    s += `<text id="dico${i}" x="${lx}" y="${fx(RL * Math.sin(rad) - 7)}"
+      text-anchor="middle" font-size="13" fill="#555577"
+      style="pointer-events:none;font-family:monospace;transition:fill 0.12s,font-size 0.12s">${act.icon}</text>`;
+    s += `<text id="dlbl${i}" x="${lx}" y="${fx(RL * Math.sin(rad) + 5)}"
+      text-anchor="middle" font-size="7.5" fill="#33335a" letter-spacing="0.5"
+      style="pointer-events:none;font-family:'Courier New',monospace;transition:fill 0.12s">${act.label}</text>`;
+    if (act.mpCost > 0) {
+      s += `<text x="${lx}" y="${fx(RL * Math.sin(rad) + 14)}"
+        text-anchor="middle" font-size="6" fill="#222244"
+        style="pointer-events:none;font-family:'Courier New',monospace">${act.mpCost}MP</text>`;
+    }
+  });
+
+  // ニードル（ドラッグ方向インジケーター）
+  s += `<line id="dneedle" x1="0" y1="0" x2="0" y2="${-RI - 20}"
+    stroke="#5555ff" stroke-width="2.5" stroke-linecap="round" opacity="0"
+    style="transition:opacity 0.1s"/>`;
+  s += `<circle id="dneedle-tip" cx="0" cy="${-RI - 20}" r="3.5"
+    fill="#5555ff" opacity="0" style="transition:opacity 0.1s"/>`;
+
+  // 内側ノブ
+  s += `<circle r="${RI}" fill="#09091a" stroke="#22224a" stroke-width="2"/>`;
+  // ノブ装飾：同心円
+  [16, 26, 36].forEach(r =>
+    s += `<circle r="${r}" fill="none" stroke="#161628" stroke-width="1"/>`)
+  // ノブ装飾：十字線
+  for (let i = 0; i < 4; i++) {
+    const a = i * 90 * Math.PI / 180;
+    s += `<line x1="${fx(7*Math.cos(a))}" y1="${fx(7*Math.sin(a))}"
+      x2="${fx(40*Math.cos(a))}" y2="${fx(40*Math.sin(a))}"
+      stroke="#1e1e44" stroke-width="1"/>`;
+  }
+  // ノブ中心
+  s += `<circle r="6" fill="#1a1a44" stroke="#3333aa" stroke-width="1.5"/>`;
+  s += `<circle r="2.5" fill="#5555cc"/>`;
+  // ノブテキスト
+  s += `<text id="dknob-txt" x="0" y="-16" text-anchor="middle" font-size="6.5"
+    fill="#2a2a55" letter-spacing="1"
+    style="pointer-events:none;font-family:'Courier New',monospace">HOLD</text>`;
+  s += `<text id="dknob-txt2" x="0" y="22" text-anchor="middle" font-size="6.5"
+    fill="#2a2a55" letter-spacing="1"
+    style="pointer-events:none;font-family:'Courier New',monospace">DIAL</text>`;
+
+  return s;
+}
+
+function dialArcPath(r1, r2, sa, ea) {
+  const [x1,y1] = [r1*Math.cos(sa), r1*Math.sin(sa)];
+  const [x2,y2] = [r2*Math.cos(sa), r2*Math.sin(sa)];
+  const [x3,y3] = [r2*Math.cos(ea), r2*Math.sin(ea)];
+  const [x4,y4] = [r1*Math.cos(ea), r1*Math.sin(ea)];
+  return `M${fx(x1)},${fx(y1)} L${fx(x2)},${fx(y2)} A${r2},${r2},0,0,1,${fx(x3)},${fx(y3)} L${fx(x4)},${fx(y4)} A${r1},${r1},0,0,0,${fx(x1)},${fx(y1)} Z`;
+}
+
+function fx(n) { return n.toFixed(2); }
+
+// ── イベントハンドラ ──────────────────────────
+function dialGetSVGPos(clientX, clientY) {
+  const svg = document.getElementById('battle-dial');
+  const rect = svg.getBoundingClientRect();
+  // SVGの中心は viewBox="-135 -135 270 270" → 表示の中心
+  const scaleX = 270 / rect.width;
+  const scaleY = 270 / rect.height;
+  return {
+    x: (clientX - rect.left) * scaleX - 135,
+    y: (clientY - rect.top)  * scaleY - 135,
+  };
+}
+
+function dialOnDown(e) {
+  if (!dialEnabled) return;
+  e.preventDefault();
+  const pos = dialGetSVGPos(e.clientX, e.clientY);
+  // 内側ノブ（r<50）を押したときだけ起動
+  if (Math.hypot(pos.x, pos.y) > 52) return;
+  dialActive = true;
+  dialOriginX = pos.x; dialOriginY = pos.y;
+  dialHighlight(-1);
+  dialSetNeedle(false, 0, 0);
+}
+
+function dialOnMove(e) {
+  if (!dialActive || !dialEnabled) return;
+  const pos = dialGetSVGPos(e.clientX, e.clientY);
+  dialUpdateDir(pos.x, pos.y);
+}
+
+function dialOnUp(e) {
+  if (!dialActive) return;
+  dialActive = false;
+  const idx = dialSelIdx;
+  dialHighlight(-1);
+  dialSetNeedle(false, 0, 0);
+  dialPreview(-1);
+  if (idx >= 0) {
+    battleAction(DIAL_ACTIONS[idx].id);
+  }
+}
+
+function dialOnTouch(e) {
+  if (!dialEnabled) return;
+  e.preventDefault();
+  const t = e.touches[0];
+  const pos = dialGetSVGPos(t.clientX, t.clientY);
+  if (Math.hypot(pos.x, pos.y) > 52) return;
+  dialActive = true;
+  dialOriginX = pos.x; dialOriginY = pos.y;
+  dialHighlight(-1);
+  dialSetNeedle(false, 0, 0);
+}
+
+function dialOnTouchMove(e) {
+  if (!dialActive || !dialEnabled) return;
+  e.preventDefault();
+  const t = e.touches[0];
+  const pos = dialGetSVGPos(t.clientX, t.clientY);
+  dialUpdateDir(pos.x, pos.y);
+}
+
+function dialOnTouchEnd(e) {
+  if (!dialActive) return;
+  dialActive = false;
+  const idx = dialSelIdx;
+  dialHighlight(-1);
+  dialSetNeedle(false, 0, 0);
+  dialPreview(-1);
+  if (idx >= 0) {
+    battleAction(DIAL_ACTIONS[idx].id);
+  }
+}
+
+// タップでセグメントを選択・確定（PC/タブレット対応）
+function dialTapSegment(idx) {
+  if (!dialEnabled) return;
+  // ドラッグ中はタップ無視
+  if (dialActive) return;
+  dialSelIdx = idx;
+  dialHighlight(idx);
+  dialPreview(idx);
+  // 短い視覚フィードバック後に確定
+  setTimeout(() => {
+    dialHighlight(-1);
+    dialPreview(-1);
+    dialSelIdx = -1;
+    battleAction(DIAL_ACTIONS[idx].id);
+  }, 130);
+}
+
+function dialUpdateDir(x, y) {
+  const dist = Math.hypot(x, y);
+  if (dist < DIAL_DEAD_ZONE) {
+    // デッドゾーン内：選択解除
+    if (dialSelIdx !== -1) { dialSelIdx = -1; dialHighlight(-1); dialPreview(-1); dialSetNeedle(false,0,0); }
+    return;
+  }
+  // 角度計算（上=-90°）
+  const angleDeg = Math.atan2(y, x) * 180 / Math.PI;
+  // 最近傍のセグメントを探す
+  let best = 0, bestDiff = Infinity;
+  DIAL_ACTIONS.forEach((act, i) => {
+    let diff = Math.abs(normAngle(angleDeg - act.angle));
+    if (diff < bestDiff) { bestDiff = diff; best = i; }
+  });
+  if (best !== dialSelIdx) {
+    dialSelIdx = best;
+    dialHighlight(best);
+    dialPreview(best);
+  }
+  // ニードル更新
+  const nx = 68 * Math.cos(angleDeg * Math.PI / 180);
+  const ny = 68 * Math.sin(angleDeg * Math.PI / 180);
+  dialSetNeedle(true, nx, ny);
+}
+
+function normAngle(a) {
+  while (a > 180) a -= 360;
+  while (a < -180) a += 360;
+  return a;
+}
+
+function dialHighlight(selIdx) {
+  DIAL_ACTIONS.forEach((act, i) => {
+    const seg = document.getElementById(`dseg${i}`);
+    const ico = document.getElementById(`dico${i}`);
+    const lbl = document.getElementById(`dlbl${i}`);
+    if (!seg) return;
+    if (i === selIdx) {
+      seg.setAttribute('fill', act.col + '28');
+      seg.setAttribute('filter', `url(#glow${i})`);
+      seg.style.filter = `drop-shadow(0 0 6px ${act.col})`;
+      if (ico) { ico.setAttribute('fill', act.col); ico.setAttribute('font-size', '15'); }
+      if (lbl) { lbl.setAttribute('fill', '#aaaacc'); }
+    } else {
+      seg.setAttribute('fill', '#0c0c1c');
+      seg.style.filter = 'none';
+      if (ico) { ico.setAttribute('fill', '#555577'); ico.setAttribute('font-size', '13'); }
+      if (lbl) { lbl.setAttribute('fill', '#33335a'); }
+    }
+  });
+  // ノブの色も変える
+  const dot = document.querySelector('#battle-dial circle[r="2.5"]');
+  if (dot) dot.setAttribute('fill', selIdx >= 0 ? DIAL_ACTIONS[selIdx].col : '#5555cc');
+}
+
+function dialSetNeedle(visible, tx, ty) {
+  const needle = document.getElementById('dneedle');
+  const tip    = document.getElementById('dneedle-tip');
+  if (!needle || !tip) return;
+  needle.setAttribute('opacity', visible ? '0.9' : '0');
+  tip.setAttribute('opacity',    visible ? '0.9' : '0');
+  if (visible) {
+    needle.setAttribute('x2', fx(tx));
+    needle.setAttribute('y2', fx(ty));
+    tip.setAttribute('cx', fx(tx));
+    tip.setAttribute('cy', fx(ty));
+    // ニードルの色を選択中のアクションに合わせる
+    const col = dialSelIdx >= 0 ? DIAL_ACTIONS[dialSelIdx].col : '#5555ff';
+    needle.setAttribute('stroke', col);
+    tip.setAttribute('fill', col);
+  }
+}
+
+function dialPreview(idx) {
+  const el = document.getElementById('dial-action-preview');
+  if (!el) return;
+  if (idx < 0) {
+    el.textContent = '— SELECT —';
+    el.style.color = '#333355';
+    el.style.textShadow = 'none';
+  } else {
+    const act = DIAL_ACTIONS[idx];
+    const mpTxt = act.mpCost > 0 ? `  [${act.mpCost}MP]` : '';
+    el.textContent = `${act.icon} ${act.label}${mpTxt}`;
+    el.style.color = act.col;
+    el.style.textShadow = `0 0 10px ${act.col}88`;
+  }
+}
+
+// =============================================
+//  歯車トランジション
+// =============================================
+function gearTransition(midCallback) {
+  const overlay  = document.getElementById('gear-overlay');
+  const track    = document.getElementById('gear-track');
+  const spinWrap = document.getElementById('gear-spin-wrap');
+  overlay.style.display = 'block';
+  // アニメーション再起動
+  track.classList.remove('active');
+  spinWrap.classList.remove('active');
+  void track.offsetWidth;
+  track.classList.add('active');
+  spinWrap.classList.add('active');
+  // 中間点で画面切替
+  setTimeout(() => { if (midCallback) midCallback(); }, 500);
+  // 完了後非表示
+  setTimeout(() => {
+    overlay.style.display = 'none';
+    track.classList.remove('active');
+    spinWrap.classList.remove('active');
+  }, 1020);
+}
+
+// 歯車SVGパスを生成して設定
+function initGearSVG() {
+  const N = 16, rTip = 178, rRoot = 148, rBore = 52;
+  const step = (2 * Math.PI) / N;
+  const tw = 0.38;
+  let d = '';
+  const p = (r, a) => `${(r*Math.cos(a)).toFixed(2)},${(r*Math.sin(a)).toFixed(2)}`;
+  for (let i = 0; i < N; i++) {
+    const base = i * step - Math.PI / 2;
+    const a0 = base - step/2 + step*0.16;
+    const a1 = base - step*tw/2;
+    const a2 = base + step*tw/2;
+    const a3 = base + step/2 - step*0.16;
+    if (i === 0) d += `M${p(rRoot,a0)}`;
+    else          d += ` L${p(rRoot,a0)}`;
+    d += ` L${p(rTip,a1)} L${p(rTip,a2)} L${p(rRoot,a3)}`;
+    const a4 = (i+1)*step - Math.PI/2 - step/2 + step*0.16;
+    d += ` A${rRoot},${rRoot},0,0,1,${p(rRoot,a4)}`;
+  }
+  d += ' Z';
+  d += ` M${rBore},0 A${rBore},${rBore},0,0,0,${-rBore},0 A${rBore},${rBore},0,0,0,${rBore},0 Z`;
+  document.getElementById('gear-outer-path').setAttribute('d', d);
+
+  // スポーク（8本）
+  const spokes = document.getElementById('gear-spokes');
+  spokes.innerHTML = '';
+  for (let i = 0; i < 8; i++) {
+    const a = i * Math.PI / 4;
+    const line = document.createElementNS('http://www.w3.org/2000/svg','line');
+    line.setAttribute('x1', (rBore*Math.cos(a)).toFixed(1));
+    line.setAttribute('y1', (rBore*Math.sin(a)).toFixed(1));
+    line.setAttribute('x2', (rRoot*0.88*Math.cos(a)).toFixed(1));
+    line.setAttribute('y2', (rRoot*0.88*Math.sin(a)).toFixed(1));
+    spokes.appendChild(line);
+  }
+  // リベット（8個）
+  const rivets = document.getElementById('gear-rivets');
+  rivets.innerHTML = '';
+  for (let i = 0; i < 8; i++) {
+    const a = (i + 0.5) * Math.PI / 4;
+    const r = rRoot * 0.72;
+    const c = document.createElementNS('http://www.w3.org/2000/svg','circle');
+    c.setAttribute('cx', (r*Math.cos(a)).toFixed(1));
+    c.setAttribute('cy', (r*Math.sin(a)).toFixed(1));
+    c.setAttribute('r', '5');
+    c.setAttribute('stroke', '#3344aa');
+    c.setAttribute('stroke-width', '1.2');
+    rivets.appendChild(c);
+  }
+}
+
+// =============================================
+//  敵グラフィックエフェクト
+// =============================================
+
+// HP比率に応じてASCIIアートを更新
+function updateEnemyArt() {
+  const e = G.battle.enemy;
+  if (!e) return;
+  const ratio = e.hp / e.maxHp;
+  const pre = document.getElementById('enemy-ascii');
+  if (!pre) return;
+
+  let art, cls;
+  if (ratio <= 0.25) {
+    art = e.asciiCrit || e.ascii;
+    cls = 'ascii enemy enemy-critical';
+  } else if (ratio <= 0.55) {
+    art = e.asciiMid || e.ascii;
+    cls = 'ascii enemy enemy-low-hp';
+  } else {
+    art = e.ascii;
+    cls = 'ascii enemy';
+  }
+  if (pre.textContent !== art) pre.textContent = art;
+  pre.className = cls;
+}
+
+// ダメージヒットエフェクト（プレイヤー→敵）
+function enemyHitEffect(dmg, isCrit) {
+  const pre = document.getElementById('enemy-ascii');
+  const wrap = document.getElementById('enemy-display-wrap');
+  if (!pre || !wrap) return;
+
+  // シェイク＋フラッシュ
+  pre.classList.remove('enemy-hit');
+  void pre.offsetWidth;
+  pre.classList.add('enemy-hit');
+  setTimeout(() => pre.classList.remove('enemy-hit'), 380);
+
+  // ダメージ数字
+  const el = document.createElement('div');
+  el.className = 'dmg-float';
+  el.textContent = isCrit ? `💥${dmg}!!` : `-${dmg}`;
+  el.style.color = isCrit ? '#ff8800' : '#ff4444';
+  el.style.textShadow = `0 0 10px ${isCrit ? '#ff440088' : '#ff000066'}`;
+  wrap.appendChild(el);
+  setTimeout(() => el.remove(), 950);
+}
+
+// 被ダメージエフェクト（敵→プレイヤー） — ログで表現するのでここは軽め
+function playerHitEffect(dmg) {
+  // ヘッダーを一瞬赤く
+  const h = document.getElementById('header-stats');
+  if (h) {
+    h.style.color = '#ff6666';
+    setTimeout(() => { h.style.color = '#888'; }, 400);
+  }
+}
+
+// 死亡エフェクト（ASCIIアートが崩壊）
+function enemyDeathEffect(callback) {
+  const pre = document.getElementById('enemy-ascii');
+  if (!pre) { if(callback) callback(); return; }
+  const glitchChars = '×#!?@X*%$░▒▓';
+  let original = pre.textContent.split('');
+  let step = 0;
+  const totalSteps = 14;
+  const interval = setInterval(() => {
+    step++;
+    const ratio = step / totalSteps;
+    pre.textContent = original.map((ch, i) => {
+      if (ch === '\n' || ch === ' ') return ch;
+      if (Math.random() < ratio * 0.9) return glitchChars[Math.floor(Math.random()*glitchChars.length)];
+      return ch;
+    }).join('');
+    pre.style.opacity = Math.max(0, 1 - ratio * 0.7).toFixed(2);
+    if (step >= totalSteps) {
+      clearInterval(interval);
+      pre.textContent = '';
+      if (callback) callback();
+    }
+  }, 55);
+}
+
+// =============================================
+//  ユーティリティ
+// =============================================
+function calcDmg(atk, def) {
+  return Math.max(1, Math.floor(Math.max(0, atk - def * 0.3) * (0.85 + Math.random() * 0.3)));
+}
+function pct(cur, max) { return Math.max(0,Math.min(100,(cur/max)*100)).toFixed(1)+'%'; }
+function pctBar(id, cur, max) { const el=document.getElementById(id); if(el) el.style.width=pct(cur,max); }
+function set(id, val) { const el=document.getElementById(id); if(el) el.textContent=val; }
+function randInt(a, b) { return Math.floor(Math.random()*(b-a+1))+a; }
+function delay(ms) { return new Promise(r=>setTimeout(r,ms)); }
+</script>
+<!-- 歯車トランジション オーバーレイ -->
+<div id="gear-overlay">
+  <div id="gear-track">
+    <div id="gear-spin-wrap">
+      <svg id="gear-svg" width="400" height="400" viewBox="-200 -200 400 400">
+        <defs>
+          <filter id="gear-glow-f" x="-30%" y="-30%" width="160%" height="160%">
+            <feGaussianBlur stdDeviation="6" result="blur"/>
+            <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+          </filter>
+          <radialGradient id="gear-grad" cx="50%" cy="50%" r="50%">
+            <stop offset="0%"   stop-color="#1a1a3a"/>
+            <stop offset="100%" stop-color="#080814"/>
+          </radialGradient>
+        </defs>
+        <!-- 外側歯車 -->
+        <path id="gear-outer-path" fill="url(#gear-grad)" stroke="#3333aa" stroke-width="2.5"
+          filter="url(#gear-glow-f)" fill-rule="evenodd"/>
+        <!-- スポーク -->
+        <g id="gear-spokes" stroke="#2222aa" stroke-width="3" opacity="0.7"></g>
+        <!-- 内側リング -->
+        <circle r="58" fill="none" stroke="#2a2a66" stroke-width="1.5" opacity="0.8"/>
+        <circle r="42" fill="#09091a" stroke="#3333aa" stroke-width="2"/>
+        <!-- 内側リベット装飾 -->
+        <g id="gear-rivets" fill="#2233aa" opacity="0.8"></g>
+        <!-- 中心 -->
+        <circle r="14" fill="#111133" stroke="#5555ff" stroke-width="2"/>
+        <circle r="5"  fill="#4444cc"/>
+        <!-- 十字 -->
+        <line x1="-11" y1="0" x2="11" y2="0" stroke="#3344cc" stroke-width="1.5"/>
+        <line x1="0" y1="-11" x2="0" y2="11" stroke="#3344cc" stroke-width="1.5"/>
+      </svg>
+    </div>
   </div>
 </div>
 
-<!-- ── Header ── -->
-<header class="relative z-10 pt-12 pb-10 px-4 text-center">
-  <div class="inline-flex items-center gap-2 bg-white/60 backdrop-blur px-4 py-1.5 rounded-full text-xs font-bold text-violet-600 mb-5 border border-violet-100 shadow-sm">
-    <span class="w-2 h-2 rounded-full bg-violet-500 animate-pulse inline-block"></span>
-    2026 Spring / Summer Edition
-  </div>
-
-  <h1 class="text-4xl md:text-6xl font-black mb-4 leading-tight tracking-tighter">
-    <span class="grad-text">日本Z世代</span><br>
-    <span class="text-gray-800">トレンドレポート</span>
-  </h1>
-
-  <p class="text-gray-500 text-sm max-w-lg mx-auto leading-relaxed mb-10">
-    リアルな媒体データとSNSの体感をミックスした、<br class="hidden sm:block">2026年春の最前線スナップショット
-  </p>
-
-  <!-- Stats row -->
-  <div class="flex justify-center gap-4 flex-wrap">
-    <div class="stat-card">
-      <div class="text-2xl font-black grad-text">5</div>
-      <div class="text-xs text-gray-400 font-bold mt-1">CATEGORIES</div>
-    </div>
-    <div class="stat-card">
-      <div class="text-2xl font-black grad-text">24+</div>
-      <div class="text-xs text-gray-400 font-bold mt-1">KEY TRENDS</div>
-    </div>
-    <div class="stat-card">
-      <div class="text-2xl font-black grad-text-cool">2026</div>
-      <div class="text-xs text-gray-400 font-bold mt-1">SPRING/SS</div>
-    </div>
-  </div>
-</header>
-
-<main class="relative z-10 max-w-6xl mx-auto px-4 pb-20">
-  <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
-
-    <!-- ── Left: Main Content ── -->
-    <div class="lg:col-span-8 space-y-6">
-
-      <!-- Fashion -->
-      <section class="fade-up">
-        <div class="flex items-center gap-3 mb-3">
-          <div class="sec-icon bg-gradient-to-br from-violet-100 to-violet-50">👗</div>
-          <div>
-            <h2 class="text-lg font-bold text-gray-900">ファッション</h2>
-            <p class="text-xs text-gray-400 font-semibold uppercase tracking-widest">クラシック回帰</p>
-          </div>
-        </div>
-        <div class="glass rounded-3xl p-6">
-          <div class="flex items-center gap-2 mb-3">
-            <span class="badge-hot text-[11px] font-bold px-3 py-1 rounded-full">🔥 信頼度：高</span>
-            <span class="text-xs text-gray-400">主要メディア・コレクション合致</span>
-          </div>
-          <p class="text-gray-700 leading-relaxed mb-5 text-sm">
-            「きちんと感」と「リラックス」の融合。かっちりしたテーラリングをあえて着崩すスタイルが主流。バルーンパンツ・進化系トレンチがキーアイテム。
-          </p>
-          <!-- Score bars -->
-          <div class="space-y-3 mb-5">
-            <div>
-              <div class="flex justify-between text-xs font-semibold mb-1">
-                <span class="text-gray-600">バルーンパンツ</span>
-                <span class="text-violet-500">92%</span>
-              </div>
-              <div class="score-track"><div class="score-fill" style="width:0" data-width="92%"></div></div>
-            </div>
-            <div>
-              <div class="flex justify-between text-xs font-semibold mb-1">
-                <span class="text-gray-600">進化系トレンチ</span>
-                <span class="text-violet-500">85%</span>
-              </div>
-              <div class="score-track"><div class="score-fill" style="width:0" data-width="85%"></div></div>
-            </div>
-            <div>
-              <div class="flex justify-between text-xs font-semibold mb-1">
-                <span class="text-gray-600">ホワイトレイヤード</span>
-                <span class="text-violet-500">78%</span>
-              </div>
-              <div class="score-track"><div class="score-fill" style="width:0" data-width="78%"></div></div>
-            </div>
-          </div>
-          <div class="h-scroll">
-            <div class="flex gap-2 pb-1">
-              <span class="pill">バルーンパンツ</span>
-              <span class="pill">進化系トレンチ</span>
-              <span class="pill">ホワイトレイヤード</span>
-              <span class="pill">ディープブルー</span>
-              <span class="pill">令嬢グレー</span>
-            </div>
-          </div>
-          <div class="mt-4 bg-violet-50 p-4 rounded-2xl border border-violet-100">
-            <p class="text-xs text-violet-700 font-bold mb-1">📌 Note</p>
-            <p class="text-xs text-violet-600">「令嬢グレー」は一部メディアのキャッチコピー。汎用的なトレンドというよりブランディングワードとして捉えるのがスマート。</p>
-          </div>
-        </div>
-      </section>
-
-      <!-- Beauty -->
-      <section class="fade-up" style="--delay:0.1s">
-        <div class="flex items-center gap-3 mb-3">
-          <div class="sec-icon bg-gradient-to-br from-pink-100 to-pink-50">💄</div>
-          <div>
-            <h2 class="text-lg font-bold text-gray-900">美容・メイク</h2>
-            <p class="text-xs text-gray-400 font-semibold uppercase tracking-widest">多幸感 ＆ 桜オーラ</p>
-          </div>
-        </div>
-        <div class="glass rounded-3xl p-6">
-          <div class="flex items-center gap-2 mb-3">
-            <span class="badge-hot text-[11px] font-bold px-3 py-1 rounded-full">🔥 信頼度：高</span>
-            <span class="text-xs text-gray-400">春の新作コスメ動向と完全一致</span>
-          </div>
-          <p class="text-gray-700 leading-relaxed mb-5 text-sm">
-            桜や花びらを連想させるピンクが主役。「光のヴェール」をまとったような透けツヤ感が重視されるシーズン。
-          </p>
-          <div class="space-y-3 mb-5">
-            <div>
-              <div class="flex justify-between text-xs font-semibold mb-1">
-                <span class="text-gray-600">透明感ブラー</span>
-                <span class="text-pink-500">94%</span>
-              </div>
-              <div class="score-track" style="background:#fce7f3"><div class="score-fill" style="width:0;background:linear-gradient(90deg,#ec4899,#f97316)" data-width="94%"></div></div>
-            </div>
-            <div>
-              <div class="flex justify-between text-xs font-semibold mb-1">
-                <span class="text-gray-600">オーロラハイライト</span>
-                <span class="text-pink-500">88%</span>
-              </div>
-              <div class="score-track" style="background:#fce7f3"><div class="score-fill" style="width:0;background:linear-gradient(90deg,#ec4899,#f97316)" data-width="88%"></div></div>
-            </div>
-            <div>
-              <div class="flex justify-between text-xs font-semibold mb-1">
-                <span class="text-gray-600">多幸感チーク</span>
-                <span class="text-pink-500">82%</span>
-              </div>
-              <div class="score-track" style="background:#fce7f3"><div class="score-fill" style="width:0;background:linear-gradient(90deg,#ec4899,#f97316)" data-width="82%"></div></div>
-            </div>
-          </div>
-          <div class="h-scroll">
-            <div class="flex gap-2 pb-1">
-              <span class="pill" style="background:rgba(236,72,153,0.06);border-color:rgba(236,72,153,0.2);color:#9d174d">透明感ブラー</span>
-              <span class="pill" style="background:rgba(236,72,153,0.06);border-color:rgba(236,72,153,0.2);color:#9d174d">オーロラハイライト</span>
-              <span class="pill" style="background:rgba(236,72,153,0.06);border-color:rgba(236,72,153,0.2);color:#9d174d">花びらフェイス</span>
-              <span class="pill" style="background:rgba(236,72,153,0.06);border-color:rgba(236,72,153,0.2);color:#9d174d">多幸感チーク</span>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <!-- Culture -->
-      <section class="fade-up" style="--delay:0.2s">
-        <div class="flex items-center gap-3 mb-3">
-          <div class="sec-icon bg-gradient-to-br from-yellow-100 to-orange-50">✨</div>
-          <div>
-            <h2 class="text-lg font-bold text-gray-900">カルチャー</h2>
-            <p class="text-xs text-gray-400 font-semibold uppercase tracking-widest">平成女児 ＆ シール交換</p>
-          </div>
-        </div>
-        <div class="glass rounded-3xl p-6">
-          <div class="flex items-center gap-2 mb-4">
-            <span class="badge-hot text-[11px] font-bold px-3 py-1 rounded-full">🔥 信頼度：高</span>
-            <span class="text-xs text-gray-400">TikTok/Instagram バズ傾向</span>
-          </div>
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div class="bg-gradient-to-br from-orange-50 to-yellow-50 p-4 rounded-2xl border border-orange-100">
-              <h3 class="text-xs font-bold text-orange-500 uppercase tracking-widest mb-2">📼 アナログ回帰</h3>
-              <p class="text-gray-700 text-sm mb-3 leading-relaxed">シール帳・シール交換がリバイバル。デジタル疲れの反動として、手元で触れる「モノ」の可愛さが再評価。</p>
-              <div class="flex flex-wrap gap-2">
-                <span class="pill">シール帳</span>
-                <span class="pill">平成女児</span>
-                <span class="pill">ホビー回帰</span>
-              </div>
-            </div>
-            <div class="bg-gradient-to-br from-violet-50 to-pink-50 p-4 rounded-2xl border border-violet-100">
-              <h3 class="text-xs font-bold text-violet-500 uppercase tracking-widest mb-2">📱 SNSの動き</h3>
-              <p class="text-gray-600 text-sm leading-relaxed">カップル・親子でのシール交換動画が人気。平成初期の「女児向けホビー」を令和のセンスで再定義する動きが加速中。</p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <!-- Lifestyle -->
-      <section class="fade-up" style="--delay:0.3s">
-        <div class="flex items-center gap-3 mb-3">
-          <div class="sec-icon bg-gradient-to-br from-green-100 to-emerald-50">🍃</div>
-          <div>
-            <h2 class="text-lg font-bold text-gray-900">メンタル・ライフスタイル</h2>
-            <p class="text-xs text-gray-400 font-semibold uppercase tracking-widest">デトックス ＆ タイパ</p>
-          </div>
-        </div>
-        <div class="glass rounded-3xl p-6">
-          <div class="flex items-center gap-2 mb-4">
-            <span class="badge-ok text-[11px] font-bold px-3 py-1 rounded-full">△ 信頼度：中</span>
-            <span class="text-xs text-gray-400">予測と概念レベルが混在</span>
-          </div>
-          <div class="space-y-4">
-            <div class="flex gap-4 items-start">
-              <div class="text-2xl">🔇</div>
-              <div>
-                <h4 class="font-bold text-gray-800 text-sm mb-1">アテンションデトックス</h4>
-                <p class="text-sm text-gray-600 leading-relaxed">通知を切り、少人数やオフラインの時間を意図的に作るマインドセット。一方でAIを駆使する「タイパ志向」も共存。</p>
-              </div>
-            </div>
-            <div class="divider"></div>
-            <div class="flex gap-4 items-start">
-              <div class="text-2xl">💬</div>
-              <div>
-                <h4 class="font-bold text-gray-800 text-sm mb-1">流行語の解釈</h4>
-                <p class="text-sm text-gray-600 leading-relaxed">「好きすぎて滅！」「苦労キャンセル」などのワードは、全国規模というよりコミュニティ内での流行りに近い。</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <!-- Music -->
-      <section class="fade-up" style="--delay:0.4s">
-        <div class="flex items-center gap-3 mb-3">
-          <div class="sec-icon bg-gradient-to-br from-cyan-100 to-blue-50">🎵</div>
-          <div>
-            <h2 class="text-lg font-bold text-gray-900">音楽・エンタメ</h2>
-            <p class="text-xs text-gray-400 font-semibold uppercase tracking-widest">J-POP ＆ サブカル</p>
-          </div>
-        </div>
-        <div class="glass rounded-3xl p-6">
-          <div class="flex items-center gap-2 mb-4">
-            <span class="badge-rising text-[11px] font-bold px-3 py-1 rounded-full">↑ 上昇中</span>
-            <span class="text-xs text-gray-400">ストリーミング・ライブ動向</span>
-          </div>
-          <p class="text-gray-700 text-sm leading-relaxed mb-5">
-            ガールズグループとコラボ文化が加速。Z世代はライブ体験とSNS拡散を同時に楽しむ「体験消費」へシフト。
-          </p>
-          <div class="grid grid-cols-3 gap-3 mb-4">
-            <div class="bg-cyan-50 rounded-2xl p-3 text-center border border-cyan-100">
-              <div class="text-lg mb-1">🎤</div>
-              <div class="text-xs font-bold text-cyan-700">ガールズ<br>グループ</div>
-            </div>
-            <div class="bg-blue-50 rounded-2xl p-3 text-center border border-blue-100">
-              <div class="text-lg mb-1">🎪</div>
-              <div class="text-xs font-bold text-blue-700">ライブ<br>体験消費</div>
-            </div>
-            <div class="bg-indigo-50 rounded-2xl p-3 text-center border border-indigo-100">
-              <div class="text-lg mb-1">📲</div>
-              <div class="text-xs font-bold text-indigo-700">SNS<br>同時拡散</div>
-            </div>
-          </div>
-          <div class="h-scroll">
-            <div class="flex gap-2 pb-1">
-              <span class="pill" style="background:rgba(6,182,212,0.06);border-color:rgba(6,182,212,0.2);color:#0e7490">J-POP</span>
-              <span class="pill" style="background:rgba(6,182,212,0.06);border-color:rgba(6,182,212,0.2);color:#0e7490">コラボ文化</span>
-              <span class="pill" style="background:rgba(6,182,212,0.06);border-color:rgba(6,182,212,0.2);color:#0e7490">体験消費</span>
-              <span class="pill" style="background:rgba(6,182,212,0.06);border-color:rgba(6,182,212,0.2);color:#0e7490">ライブ配信</span>
-            </div>
-          </div>
-        </div>
-      </section>
-
-    </div><!-- /left -->
-
-    <!-- ── Right Sidebar ── -->
-    <div class="lg:col-span-4 space-y-5">
-
-      <!-- Reliability Map -->
-      <div class="bg-white rounded-3xl p-6 shadow-sm border border-gray-100 fade-up">
-        <h3 class="font-black text-base mb-5 flex items-center gap-2">
-          <span class="grad-text">信頼度マップ</span>
-        </h3>
-        <div class="space-y-4">
-          <div>
-            <div class="flex items-center gap-2 mb-2">
-              <span class="w-2 h-2 rounded-full bg-emerald-400 inline-block"></span>
-              <span class="text-xs font-bold text-emerald-600">本物トレンド（確実）</span>
-            </div>
-            <div class="flex flex-wrap gap-1.5">
-              <span class="text-[11px] bg-emerald-50 text-emerald-700 px-2.5 py-1 rounded-full font-semibold border border-emerald-100">バルーンパンツ</span>
-              <span class="text-[11px] bg-emerald-50 text-emerald-700 px-2.5 py-1 rounded-full font-semibold border border-emerald-100">ピンクメイク</span>
-              <span class="text-[11px] bg-emerald-50 text-emerald-700 px-2.5 py-1 rounded-full font-semibold border border-emerald-100">シール帳</span>
-              <span class="text-[11px] bg-emerald-50 text-emerald-700 px-2.5 py-1 rounded-full font-semibold border border-emerald-100">AI活用</span>
-              <span class="text-[11px] bg-emerald-50 text-emerald-700 px-2.5 py-1 rounded-full font-semibold border border-emerald-100">体験消費</span>
-            </div>
-          </div>
-          <div class="divider"></div>
-          <div>
-            <div class="flex items-center gap-2 mb-2">
-              <span class="w-2 h-2 rounded-full bg-amber-400 inline-block"></span>
-              <span class="text-xs font-bold text-amber-600">ローカル・予測（参考）</span>
-            </div>
-            <div class="flex flex-wrap gap-1.5">
-              <span class="text-[11px] bg-amber-50 text-amber-700 px-2.5 py-1 rounded-full font-semibold border border-amber-100">令嬢グレー</span>
-              <span class="text-[11px] bg-amber-50 text-amber-700 px-2.5 py-1 rounded-full font-semibold border border-amber-100">苦労キャンセル</span>
-              <span class="text-[11px] bg-amber-50 text-amber-700 px-2.5 py-1 rounded-full font-semibold border border-amber-100">好きすぎて滅</span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- 総評 -->
-      <div class="rounded-3xl p-6 text-white shadow-xl fade-up relative overflow-hidden" style="background: linear-gradient(135deg, #7c3aed 0%, #ec4899 60%, #f97316 100%)">
-        <div class="absolute inset-0 opacity-10" style="background-image:url('data:image/svg+xml,%3Csvg width=\'40\' height=\'40\' viewBox=\'0 0 40 40\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cg fill=\'white\' fill-opacity=\'1\'%3E%3Ccircle cx=\'20\' cy=\'20\' r=\'1\'/%3E%3C/g%3E%3C/svg%3E')"></div>
-        <h3 class="font-black text-base mb-3 relative">✦ 総評：2026年の空気感</h3>
-        <p class="text-sm leading-relaxed opacity-90 mb-4 relative">
-          「公式トレンド」をそのまま受け入れず、自分たちの「エモさ（平成女児・シール）」や「効率（AI）」に落とし込む傾向が顕著。
-        </p>
-        <div class="bg-white/20 backdrop-blur p-4 rounded-2xl text-xs relative">
-          <strong class="block mb-1">💡 Check Point</strong>
-          メディア主導のキャッチコピーに惑わされず、「売れているモノ」と「バズっている行動」を切り分けることがコツ。
-        </div>
-      </div>
-
-      <!-- Spring Event -->
-      <a href="https://www.tokyodisneyresort.jp/tds/25th/" target="_blank" rel="noopener" class="block bg-white rounded-2xl p-4 border border-gray-100 shadow-sm hover:shadow-md hover:-translate-y-1 transition-all duration-300 fade-up group">
-        <p class="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-1">🌸 Spring Event</p>
-        <p class="text-sm font-bold text-gray-800 group-hover:text-violet-600 transition-colors">ディズニーシー 25周年</p>
-        <p class="text-xs text-gray-400 mt-1 group-hover:text-violet-400 transition-colors">詳しく見る →</p>
-      </a>
-
-      <!-- AI Trend -->
-      <div class="glass rounded-2xl p-5 fade-up">
-        <p class="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-3">🤖 注目キーワード</p>
-        <div class="space-y-2">
-          <div class="flex items-center justify-between">
-            <span class="text-sm font-semibold text-gray-700">AI活用・タイパ</span>
-            <span class="text-xs text-violet-500 font-bold">↑ 急上昇</span>
-          </div>
-          <div class="score-track"><div class="score-fill" data-width="90%" style="width:0"></div></div>
-          <div class="flex items-center justify-between mt-3">
-            <span class="text-sm font-semibold text-gray-700">アナログ回帰</span>
-            <span class="text-xs text-pink-500 font-bold">↑ 上昇中</span>
-          </div>
-          <div class="score-track"><div class="score-fill" style="width:0;background:linear-gradient(90deg,#ec4899,#f97316)" data-width="75%"></div></div>
-          <div class="flex items-center justify-between mt-3">
-            <span class="text-sm font-semibold text-gray-700">体験消費</span>
-            <span class="text-xs text-cyan-500 font-bold">↑ 注目</span>
-          </div>
-          <div class="score-track"><div class="score-fill" style="width:0;background:linear-gradient(90deg,#06b6d4,#7c3aed)" data-width="80%"></div></div>
-        </div>
-      </div>
-
-    </div><!-- /right -->
-  </div>
-</main>
-
-<footer class="relative z-10 text-center text-gray-300 text-[10px] tracking-widest uppercase pb-8">
-  &copy; 2026 Trend Analysis Report / Japan Insight
-</footer>
-
-<script>
-  // Scroll animations
-  const observer = new IntersectionObserver((entries) => {
-    entries.forEach((entry, i) => {
-      if (entry.isIntersecting) {
-        const delay = parseFloat(getComputedStyle(entry.target).getPropertyValue('--delay') || '0');
-        setTimeout(() => entry.target.classList.add('visible'), delay * 1000);
-      }
-    });
-  }, { threshold: 0.1 });
-  document.querySelectorAll('.fade-up').forEach(el => observer.observe(el));
-
-  // Score bar animation
-  const scoreObs = new IntersectionObserver((entries) => {
-    entries.forEach(entry => {
-      if (entry.isIntersecting) {
-        entry.target.querySelectorAll('.score-fill[data-width]').forEach(bar => {
-          setTimeout(() => { bar.style.width = bar.dataset.width; }, 200);
-        });
-      }
-    });
-  }, { threshold: 0.3 });
-  document.querySelectorAll('.glass, .fade-up').forEach(el => scoreObs.observe(el));
-</script>
 </body>
 </html>
