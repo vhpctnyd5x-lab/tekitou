@@ -404,6 +404,29 @@
     overflow-y: auto;
     min-height: 0;
   }
+
+  #tutorial-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 9998;
+    background: rgba(0,0,0,0.88);
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    font-family: 'Courier New', monospace;
+    padding: 20px;
+  }
+  #tutorial-overlay.active { display: flex; }
+  .tut-box {
+    background: #0d0d1a;
+    border: 1px solid #333388;
+    border-radius: 4px;
+    padding: 20px 24px;
+    max-width: 420px;
+    width: 100%;
+  }
 </style>
 </head>
 <body>
@@ -444,6 +467,9 @@
         <button class="primary" onclick="startSinglePlayer()" style="padding:14px;font-size:15px;">
           ▶ ダンジョンへ潜る（ソロ）
         </button>
+        <button onclick="startRandomDungeon()" style="padding:12px;font-size:14px;">
+          🎲 ランダムダンジョン（5階層）
+        </button>
         <button onclick="showMultiplayerLobby()" style="padding:12px;font-size:14px;">
           ⚔ オンライン対戦（2人）
         </button>
@@ -454,6 +480,11 @@
         <div>🟢 <span style="color:#88ff88;">初級</span> — スライム（ぷるぷる系、弱い）</div>
         <div>🟡 <span style="color:#ffff88;">中級</span> — 骸骨戦士（古の戦士、手強い）</div>
         <div>🔴 <span style="color:#ff88ff;">上級</span> — 邪龍【BOSS】（最強、圧倒的）</div>
+      </div>
+
+      <div id="highscore-panel" style="margin-top:16px;padding:10px;background:#0a0a14;border:1px solid #1a1a33;border-radius:2px;">
+        <div style="color:#ffdd44;font-size:12px;margin-bottom:8px;">🏆 ハイスコア</div>
+        <div id="highscore-list" style="font-size:11px;color:#666;">記録なし</div>
       </div>
 
       <div class="muted center" style="margin-top:12px;">Powered by Claude claude-sonnet-4-6 · PeerJS P2P</div>
@@ -636,6 +667,46 @@
     <button onclick="goTitle()">← タイトルへ</button>
   </div>
 
+  <!-- ========== SHOP ========== -->
+  <div class="screen" id="screen-shop">
+    <div style="max-width:480px;margin:0 auto;">
+      <div style="text-align:center;margin-bottom:16px;">
+        <span class="game-title">🛒 ショップ</span>
+      </div>
+      <div class="stat-panel" style="margin-bottom:12px;">
+        <div class="stat-row">
+          <span class="stat-name">所持金</span>
+          <span class="gold" id="shop-gold">0</span>
+          <span class="stat-name" style="margin-left:12px;">HP</span>
+          <span class="stat-val" id="shop-hp">-</span>
+          <span class="stat-name" style="margin-left:12px;">MP</span>
+          <span class="stat-val" id="shop-mp">-</span>
+        </div>
+      </div>
+      <ul class="item-list" id="shop-item-list" style="margin-bottom:16px;"></ul>
+      <div style="display:flex;gap:8px;">
+        <button class="primary" onclick="closeShop()" style="flex:1;padding:12px;">
+          ⚔ 冒険へ出発！
+        </button>
+      </div>
+      <div id="shop-msg" style="text-align:center;color:#44ff88;font-size:12px;min-height:20px;margin-top:8px;"></div>
+    </div>
+  </div>
+
+  <!-- ========== CLASS SELECT ========== -->
+  <div class="screen" id="screen-class-select">
+    <div style="max-width:500px;margin:0 auto;">
+      <div style="text-align:center;margin-bottom:20px;">
+        <span class="game-title">⚔ クラス選択</span>
+        <div style="color:#666;font-size:11px;margin-top:6px;">冒険者のクラスを選んでください</div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:10px;" id="class-select-list"></div>
+      <div style="margin-top:16px;text-align:center;">
+        <button onclick="goTitle()">← タイトルへ戻る</button>
+      </div>
+    </div>
+  </div>
+
   <!-- ========== MP BATTLE ========== -->
   <div class="screen" id="screen-mp-battle">
     <div class="center" style="margin-bottom:10px;">
@@ -704,6 +775,34 @@
   <div class="rotate-icon">📱</div>
   <div style="font-size:16px;color:#8888cc;">横画面で遊んでください</div>
   <div style="font-size:12px;color:#444466;margin-top:4px;">DUNGEON AI RPG は横画面専用です</div>
+</div>
+
+<div id="tutorial-overlay">
+  <div class="tut-box">
+    <div style="color:#7070ff;font-size:16px;text-align:center;margin-bottom:16px;letter-spacing:2px;">
+      ⚔ バトル操作ガイド
+    </div>
+    <div style="font-size:12px;line-height:1.9;color:#aaaacc;">
+      <div style="margin-bottom:10px;">
+        <span style="color:#ffdd44;">🎯 タップ選択</span><br>
+        ダイヤルの各セグメントをタップして行動を選択・即実行
+      </div>
+      <div style="margin-bottom:10px;">
+        <span style="color:#44ff88;">🔄 ドラッグ入力</span><br>
+        中心ノブを長押し＋ドラッグで方向を指定し、離すと実行
+      </div>
+      <div style="margin-bottom:10px;">
+        <span style="color:#ff8888;">⚡ 8方向</span><br>
+        攻撃・ファイア・サンダー・ブリザド・ヒール・アイテム・逃げる・メガ斬り
+      </div>
+      <div style="color:#555;font-size:10px;">
+        MPが足りないスキルは使用不可
+      </div>
+    </div>
+    <button onclick="dismissTutorial()" class="primary" style="width:100%;margin-top:16px;padding:10px;font-size:13px;">
+      ⚔ バトル開始！
+    </button>
+  </div>
 </div>
 
 <script>
@@ -1011,15 +1110,231 @@ const ITEMS = {
   bomb:      { id:'bomb',      name:'爆弾',       icon:'💣', desc:'敵に30ダメ', combat:true, use:(p,e)=>{ e.hp=Math.max(0,e.hp-30); return '爆発！敵に30ダメージ！'; } },
   fireScroll:{ id:'fireScroll',name:'炎の巻物',   icon:'📜', desc:'敵に50ダメ', combat:true, use:(p,e)=>{ e.hp=Math.max(0,e.hp-50); return '炎が迸る！敵に50ダメージ！'; } },
 };
+
+const CLASSES = {
+  warrior: {
+    id:'warrior', name:'剣士', icon:'⚔',
+    hp:130, maxHp:130, mp:30, maxMp:30, atk:20, def:12,
+    desc:'高ATK・高DEF。物理攻撃特化の重戦士。',
+    bonus:'物理ダメージ+20%'
+  },
+  mage: {
+    id:'mage', name:'魔法使い', icon:'🔮',
+    hp:80, maxHp:80, mp:80, maxMp:80, atk:10, def:5,
+    desc:'高MP・魔法特化。スキルMP消費-5。',
+    bonus:'スキルMP消費-5'
+  },
+  thief: {
+    id:'thief', name:'盗賊', icon:'🗡',
+    hp:100, maxHp:100, mp:50, maxMp:50, atk:15, def:8,
+    desc:'逃走成功率100%。会心率+30%。',
+    bonus:'逃走確定 & 会心率高'
+  }
+};
+
+const SHOP_ITEMS = [
+  { id:'potion',     price:30,  type:'item',    label:'回復薬',     desc:'HP+30' },
+  { id:'mpPotion',   price:25,  type:'item',    label:'マナ薬',     desc:'MP+20' },
+  { id:'bomb',       price:50,  type:'item',    label:'爆弾',       desc:'敵に30ダメ' },
+  { id:'elixir',     price:100, type:'item',    label:'エリクサー', desc:'HP全回復' },
+  { id:'fireScroll', price:80,  type:'item',    label:'炎の巻物',   desc:'敵に50ダメ' },
+  { id:'upg_atk',    price:150, type:'upgrade', label:'ATK+5強化',  desc:'永続強化', max:3, apply:(p)=>{ p.atk+=5; } },
+  { id:'upg_def',    price:100, type:'upgrade', label:'DEF+3強化',  desc:'永続強化', max:3, apply:(p)=>{ p.def+=3; } },
+  { id:'upg_hp',     price:120, type:'upgrade', label:'MaxHP+30',   desc:'永続強化', max:3, apply:(p)=>{ p.maxHp+=30; p.hp=Math.min(p.hp+30,p.maxHp); } },
+  { id:'upg_mp',     price:80,  type:'upgrade', label:'MaxMP+20',   desc:'永続強化', max:3, apply:(p)=>{ p.maxMp+=20; p.mp=Math.min(p.mp+20,p.maxMp); } },
+];
 const DROP_POOL = ['potion','potion','potion','mpPotion','bomb','elixir','fireScroll'];
+
+// =============================================
+//  ランダムイベント
+// =============================================
+const RANDOM_EVENTS = [
+  {
+    type: 'treasure',
+    name: '宝の部屋',
+    icon: '💰',
+    desc: '輝く宝箱が置かれた部屋。何かが入っているようだ...',
+    resolve(log) {
+      const p = G.player;
+      const roll = Math.random();
+      if (roll < 0.4) {
+        const g = randInt(30, 120);
+        p.gold += g;
+        log(`💰 ${g}ゴールドを発見！`);
+      } else if (roll < 0.7) {
+        const pool = ['potion','mpPotion','bomb','elixir','fireScroll'];
+        const id = pool[Math.floor(Math.random()*pool.length)];
+        p.items.push({...ITEMS[id]});
+        log(`${ITEMS[id].icon} ${ITEMS[id].name}を発見！`);
+      } else {
+        const g = randInt(50, 200);
+        p.gold += g;
+        const id = 'potion';
+        p.items.push({...ITEMS[id]});
+        log(`✨ 大当たり！${g}ゴールド＋回復薬を発見！`);
+      }
+    }
+  },
+  {
+    type: 'trap',
+    name: '罠の部屋',
+    icon: '⚠',
+    desc: '不気味な静けさ。足元に何かが仕掛けられているかもしれない...',
+    resolve(log) {
+      const p = G.player;
+      const dmg = randInt(8, 25);
+      p.hp = Math.max(1, p.hp - dmg);
+      log(`⚠ 罠発動！${dmg}ダメージを受けた！(HP:${p.hp}/${p.maxHp})`);
+    }
+  },
+  {
+    type: 'spring',
+    name: '回復の泉',
+    icon: '💎',
+    desc: '澄んだ泉が湧き出ている。触れると温かい力を感じる...',
+    resolve(log) {
+      const p = G.player;
+      const hHeal = Math.min(randInt(25, 50), p.maxHp - p.hp);
+      const mHeal = Math.min(randInt(15, 30), p.maxMp - p.mp);
+      p.hp += hHeal; p.mp += mHeal;
+      log(`💎 泉の力でHP+${hHeal}、MP+${mHeal}回復！`);
+    }
+  },
+  {
+    type: 'merchant',
+    name: '旅の商人',
+    icon: '🧙',
+    desc: '見知らぬ老人が立っている。「安くしておくよ」とニヤリとした。',
+    resolve(log) {
+      const pool = ['potion','mpPotion','bomb'];
+      const id = pool[Math.floor(Math.random()*pool.length)];
+      G.player.items.push({...ITEMS[id]});
+      log(`🧙 商人から${ITEMS[id].name}を贈られた！`);
+    }
+  }
+];
+
+// =============================================
+//  ランダムダンジョン生成
+// =============================================
+function generateRandomDungeon() {
+  const shuffled = ['slime','skeleton'].sort(() => Math.random()-0.5);
+  const floors = [];
+
+  const evt1 = RANDOM_EVENTS[Math.floor(Math.random()*RANDOM_EVENTS.length)];
+  floors.push({
+    type: 'event',
+    name: `B1F — ${evt1.name}`,
+    icon: evt1.icon,
+    desc: evt1.desc,
+    event: evt1,
+    exits: [{ label: `${evt1.icon} 探索する`, action: 'event' }, { label: '→ 次の階へ', action: 'next' }]
+  });
+
+  const enemy1 = shuffled[0];
+  const tmpl1 = ENEMIES[enemy1];
+  floors.push({
+    type: 'battle',
+    name: `B2F — ${tmpl1.name}の間`,
+    desc: `⚔ 前方から${tmpl1.name}の気配がする...`,
+    enemy: enemy1,
+    rankClass: 'rank-' + tmpl1.rank,
+    exits: [{ label: `${tmpl1.rank === 'easy' ? '👾' : '💀'} ${tmpl1.name}と戦う`, action: 'fight' }, { label: '→ 逃げて次の階へ', action: 'next' }]
+  });
+
+  const evt2 = RANDOM_EVENTS[Math.floor(Math.random()*RANDOM_EVENTS.length)];
+  floors.push({
+    type: 'event',
+    name: `B3F — ${evt2.name}`,
+    icon: evt2.icon,
+    desc: evt2.desc,
+    event: evt2,
+    exits: [{ label: `${evt2.icon} 探索する`, action: 'event' }, { label: '→ 次の階へ', action: 'next' }]
+  });
+
+  const enemy2 = shuffled[1];
+  const tmpl2 = ENEMIES[enemy2];
+  floors.push({
+    type: 'battle',
+    name: `B4F — ${tmpl2.name}の間`,
+    desc: `⚔ 重い足音が近づいてくる...`,
+    enemy: enemy2,
+    rankClass: 'rank-' + tmpl2.rank,
+    exits: [{ label: `${tmpl2.rank === 'easy' ? '👾' : '💀'} ${tmpl2.name}と戦う`, action: 'fight' }, { label: '→ 逃げて最深部へ', action: 'next' }]
+  });
+
+  floors.push({
+    type: 'battle',
+    name: 'B5F — 最深部〔BOSS〕',
+    desc: '🔥 溶岩が流れる巨大な空洞。地響きとともに、巨大な影が現れた...',
+    enemy: 'dragonBoss',
+    rankClass: 'rank-hard',
+    exits: [{ label: '🐉 邪龍と戦う！', action: 'fight' }]
+  });
+
+  return floors;
+}
+
+function loadRandomDungeonRoom(index) {
+  if (index >= G.randomDungeon.length) { showClear(); return; }
+  G.dungeonIndex = index;
+  const room = G.randomDungeon[index];
+
+  document.getElementById('dungeon-room-text').innerHTML =
+    `<span style="color:#aaaaff;font-size:12px;">${room.name}</span><br><br>${room.desc}`;
+
+  const exits = document.getElementById('room-exits');
+  exits.innerHTML = '';
+
+  if (room.type === 'battle') {
+    const shopBtn = document.createElement('button');
+    shopBtn.innerHTML = '🛒 ショップ';
+    shopBtn.className = 'success';
+    shopBtn.onclick = () => {
+      if (typeof showShop === 'function') {
+        showShop(() => { showScreen('dungeon'); updateDungeonUI(); });
+      }
+    };
+    exits.appendChild(shopBtn);
+  }
+
+  room.exits.forEach(e => {
+    const btn = document.createElement('button');
+    btn.innerHTML = e.label;
+    if (e.action === 'fight') btn.className = 'danger';
+    btn.onclick = () => {
+      if (e.action === 'fight') {
+        startEncounter(room.enemy);
+      } else if (e.action === 'event') {
+        room.event.resolve((msg) => dungeonLog(msg));
+        updateDungeonUI();
+        exits.innerHTML = '';
+        const nextBtn = document.createElement('button');
+        nextBtn.innerHTML = '→ 次の階へ';
+        nextBtn.onclick = () => loadRandomDungeonRoom(index + 1);
+        exits.appendChild(nextBtn);
+      } else {
+        loadRandomDungeonRoom(index + 1);
+      }
+    };
+    exits.appendChild(btn);
+  });
+
+  updateDungeonUI();
+}
 
 // =============================================
 //  ゲーム状態
 // =============================================
 const G = {
   apiKey: '',
+  playerClass: 'warrior',
   player: {},
   dungeonIndex: 0,
+  shopUpgrades: {},
+  isRandomDungeon: false,
+  randomDungeon: [],
+  battleStats: { turns: 0, skillsUsed: {}, itemsUsed: 0, damageDealt: 0, damageTaken: 0 },
   battle: {
     enemy: null,
     active: false,
@@ -1044,23 +1359,70 @@ window.onload = () => {
   if (saved) document.getElementById('api-key-input').value = saved;
   initGearSVG();
   showScreen('title');
+  renderHighScores();
 };
 
 function resetPlayer(name) {
+  const cls = CLASSES[G.playerClass] || CLASSES.warrior;
   G.player = {
     name: name || '冒険者',
-    hp: 100, maxHp: 100, mp: 50, maxMp: 50,
-    atk: 15, def: 8, level: 1, exp: 0, expNext: 100,
+    class: G.playerClass || 'warrior',
+    hp: cls.hp, maxHp: cls.maxHp, mp: cls.mp, maxMp: cls.maxMp,
+    atk: cls.atk, def: cls.def, level: 1, exp: 0, expNext: 100,
     gold: 0,
     items: [ {...ITEMS.potion}, {...ITEMS.potion}, {...ITEMS.mpPotion} ]
   };
 }
 
 function startSinglePlayer() {
+  showClassSelect();
+}
+
+function showClassSelect() {
   const key = document.getElementById('api-key-input').value.trim();
   const name = document.getElementById('player-name-input').value.trim() || '冒険者';
   G.apiKey = key;
+  G._pendingName = name;
   if (key) localStorage.setItem('dungeonAI_apiKey', key);
+  renderClassSelect();
+  showScreen('class-select');
+}
+
+function renderClassSelect() {
+  const list = document.getElementById('class-select-list');
+  if (!list) return;
+  list.innerHTML = '';
+  Object.values(CLASSES).forEach(cls => {
+    const div = document.createElement('div');
+    div.className = 'stat-panel';
+    div.style.cssText = 'cursor:pointer;transition:border-color 0.2s;';
+    div.innerHTML = `
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+        <span style="font-size:18px;">${cls.icon}</span>
+        <span style="color:#aaaaff;font-size:15px;font-weight:bold;">${cls.name}</span>
+        <span class="badge" style="font-size:10px;">${cls.bonus}</span>
+      </div>
+      <div style="color:#888;font-size:11px;margin-bottom:8px;">${cls.desc}</div>
+      <div style="display:flex;gap:12px;font-size:11px;color:#666;">
+        <span>HP:<span style="color:#ff6666">${cls.hp}</span></span>
+        <span>MP:<span style="color:#6666ff">${cls.mp}</span></span>
+        <span>ATK:<span style="color:#ffdd44">${cls.atk}</span></span>
+        <span>DEF:<span style="color:#44aaff">${cls.def}</span></span>
+      </div>
+      <button class="primary" style="width:100%;margin-top:10px;padding:10px;"
+        onclick="selectClassAndStart('${cls.id}')">
+        ${cls.icon} ${cls.name}で冒険開始
+      </button>
+    `;
+    list.appendChild(div);
+  });
+}
+
+function selectClassAndStart(classId) {
+  G.playerClass = classId;
+  const name = G._pendingName || '冒険者';
+  G.shopUpgrades = {};
+  G.isRandomDungeon = false;
   resetPlayer(name);
   G.dungeonIndex = 0;
   gearTransition(() => {
@@ -1068,6 +1430,28 @@ function startSinglePlayer() {
     document.getElementById('game-header').style.display = 'flex';
     updateDungeonUI();
     loadDungeonRoom(0);
+  });
+}
+
+function startRandomDungeon() {
+  const key = document.getElementById('api-key-input').value.trim();
+  const name = document.getElementById('player-name-input').value.trim() || '冒険者';
+  G.apiKey = key;
+  if (key) localStorage.setItem('dungeonAI_apiKey', key);
+  G.playerClass = G.playerClass || 'warrior';
+  if (typeof resetPlayer === 'function') resetPlayer(name);
+  else {
+    G.player = { name, hp:100, maxHp:100, mp:50, maxMp:50, atk:15, def:8, level:1, exp:0, expNext:100, gold:0, items:[{...ITEMS.potion},{...ITEMS.potion},{...ITEMS.mpPotion}] };
+  }
+  G.isRandomDungeon = true;
+  G.randomDungeon = generateRandomDungeon();
+  G.dungeonIndex = 0;
+  G.shopUpgrades = {};
+  gearTransition(() => {
+    showScreen('dungeon');
+    document.getElementById('game-header').style.display = 'flex';
+    updateDungeonUI();
+    loadRandomDungeonRoom(0);
   });
 }
 
@@ -1096,6 +1480,17 @@ function loadDungeonRoom(index) {
     `<span style="color:#aaaaff;font-size:12px;">${room.name}</span><br><br>${room.desc}`;
   const exits = document.getElementById('room-exits');
   exits.innerHTML = '';
+  // Shop button
+  const shopBtn = document.createElement('button');
+  shopBtn.innerHTML = '🛒 ショップ';
+  shopBtn.className = 'success';
+  shopBtn.onclick = () => {
+    showShop(() => {
+      showScreen('dungeon');
+      updateDungeonUI();
+    });
+  };
+  exits.appendChild(shopBtn);
   room.exits.forEach(e => {
     const btn = document.createElement('button');
     btn.innerHTML = e.label;
@@ -1187,6 +1582,7 @@ function startEncounter(enemyId) {
   G.battle.enemyState = { charged: false, berserked: false, regenUsed: 0, roarCD: 0, raged: false };
   G.battle.playerStatus = { poison:0, stun:0, defDown:0, atkDown:0, defDownVal:0, atkDownVal:0 };
   G.battle.enemyGuarding = false;
+  G.battleStats = { turns: 0, skillsUsed: {}, itemsUsed: 0, damageDealt: 0, damageTaken: 0 };
   gearTransition(() => { _doStartEncounterUI(tmpl); });
 }
 
@@ -1203,7 +1599,9 @@ function _doStartEncounterUI(tmpl) {
   document.getElementById('enemy-name-display').textContent = tmpl.name;
   const speechEl = document.getElementById('enemy-speech');
   if (speechEl) speechEl.textContent = '...';
-  document.getElementById('b-player-name').textContent = G.player.name;
+  const cls = CLASSES[G.player.class];
+  document.getElementById('b-player-name').textContent =
+    (cls ? cls.icon + ' ' : '') + G.player.name;
   document.getElementById('battle-log').innerHTML = '';
   document.getElementById('item-popup').style.display = 'none';
   updateBattleUI();
@@ -1212,6 +1610,7 @@ function _doStartEncounterUI(tmpl) {
   setActionsEnabled(true);
   battleLog(`⚔ ${tmpl.name}が現れた！`, 'system');
   if (tmpl.rank === 'hard') battleLog('💀 これはボスモンスターだ！全力で戦え！', 'special');
+  checkTutorial();
 }  // end _doStartEncounterUI
 
 // =============================================
@@ -1307,8 +1706,10 @@ async function battleAction(action) {
     if (p.hp <= 0) { gameOver(); return; }
   }
 
+  G.battleStats.turns = (G.battleStats.turns || 0) + 1;
+
   if (action === 'flee') {
-    if (Math.random() < 0.5) {
+    if (G.player.class === 'thief' || Math.random() < 0.5) {
       battleLog('💨 逃げた！', 'system');
       G.battle.active = false;
       setTimeout(() => { showScreen('dungeon'); updateDungeonUI(); }, 800);
@@ -1330,26 +1731,35 @@ async function battleAction(action) {
     return;
   }
 
+  const mpDiscount = p.class === 'mage' ? 5 : 0;
   let dmg = 0, mpCost = 0;
   if (action === 'attack') {
     dmg = calcDmg(effAtk, e.def);
+    if (G.player.class === 'warrior') dmg = Math.floor(dmg * 1.2);
     if (isGuarding) { dmg = Math.floor(dmg * 0.4); G.battle.enemyGuarding = false; battleLog(`🛡 ${e.name}は防御体勢！ダメージ激減！`, 'system'); }
+    if (G.player.class === 'thief' && Math.random() < 0.3) {
+      dmg = Math.floor(dmg * 2);
+      battleLog(`💫 ${p.name}の会心の一撃！`, 'special');
+    }
     battleLog(`⚔ ${p.name}の攻撃！ ${e.name}に${dmg}ダメージ！`, 'player');
   } else if (action === 'skill_fire') {
-    mpCost = 10;
-    if (p.mp < mpCost) { battleLog('MPが足りない！(ファイア:10MP)', 'system'); setActionsEnabled(true); return; }
+    mpCost = Math.max(0, 10 - mpDiscount);
+    if (p.mp < mpCost) { battleLog(`MPが足りない！(ファイア:${10 - mpDiscount}MP)`, 'system'); setActionsEnabled(true); return; }
+    G.battleStats.skillsUsed[action] = (G.battleStats.skillsUsed[action] || 0) + 1;
     dmg = calcDmg(effAtk * 1.5, e.def * 0.5);
     if (isGuarding) { dmg = Math.floor(dmg * 0.4); G.battle.enemyGuarding = false; }
     battleLog(`🔥 ファイア！ ${e.name}に${dmg}ダメージ！`, 'skill');
   } else if (action === 'skill_thunder') {
-    mpCost = 15;
-    if (p.mp < mpCost) { battleLog('MPが足りない！(サンダー:15MP)', 'system'); setActionsEnabled(true); return; }
+    mpCost = Math.max(0, 15 - mpDiscount);
+    if (p.mp < mpCost) { battleLog(`MPが足りない！(サンダー:${15 - mpDiscount}MP)`, 'system'); setActionsEnabled(true); return; }
+    G.battleStats.skillsUsed[action] = (G.battleStats.skillsUsed[action] || 0) + 1;
     dmg = calcDmg(effAtk * 2, e.def * 0.3);
     if (isGuarding) { dmg = Math.floor(dmg * 0.7); G.battle.enemyGuarding = false; }
     battleLog(`⚡ サンダー！ ${e.name}に${dmg}ダメージ！（ガード貫通）`, 'skill');
   } else if (action === 'skill_heal') {
-    mpCost = 20;
-    if (p.mp < mpCost) { battleLog('MPが足りない！(ヒール:20MP)', 'system'); setActionsEnabled(true); return; }
+    mpCost = Math.max(0, 20 - mpDiscount);
+    if (p.mp < mpCost) { battleLog(`MPが足りない！(ヒール:${20 - mpDiscount}MP)`, 'system'); setActionsEnabled(true); return; }
+    G.battleStats.skillsUsed[action] = (G.battleStats.skillsUsed[action] || 0) + 1;
     const h = Math.min(40, p.maxHp - p.hp);
     p.hp += h; p.mp -= mpCost;
     if (ps.poison > 0) { ps.poison = Math.max(0, ps.poison - 1); battleLog(`💚 ヒール！ HPが${h}回復！毒も1ターン軽減！`, 'heal'); }
@@ -1358,14 +1768,16 @@ async function battleAction(action) {
     setTimeout(() => enemyTurn(), 800);
     return;
   } else if (action === 'skill_blizzard') {
-    mpCost = 25;
-    if (p.mp < mpCost) { battleLog('MPが足りない！(ブリザド:25MP)', 'system'); setActionsEnabled(true); return; }
+    mpCost = Math.max(0, 25 - mpDiscount);
+    if (p.mp < mpCost) { battleLog(`MPが足りない！(ブリザド:${25 - mpDiscount}MP)`, 'system'); setActionsEnabled(true); return; }
+    G.battleStats.skillsUsed[action] = (G.battleStats.skillsUsed[action] || 0) + 1;
     dmg = calcDmg(effAtk * 2.5, e.def * 0.2);
     if (isGuarding) { dmg = Math.floor(dmg * 0.4); G.battle.enemyGuarding = false; }
     battleLog(`❄️ ブリザド！ ${e.name}に${dmg}ダメージ！`, 'skill');
   } else if (action === 'skill_mega') {
-    mpCost = 20;
-    if (p.mp < mpCost) { battleLog('MPが足りない！(メガ斬り:20MP)', 'system'); setActionsEnabled(true); return; }
+    mpCost = Math.max(0, 20 - mpDiscount);
+    if (p.mp < mpCost) { battleLog(`MPが足りない！(メガ斬り:${20 - mpDiscount}MP)`, 'system'); setActionsEnabled(true); return; }
+    G.battleStats.skillsUsed[action] = (G.battleStats.skillsUsed[action] || 0) + 1;
     dmg = calcDmg(effAtk * 3, e.def);
     if (isGuarding) { dmg = Math.floor(dmg * 0.4); G.battle.enemyGuarding = false; }
     battleLog(`💥 メガ斬り！ ${e.name}に${dmg}の大ダメージ！`, 'skill');
@@ -1374,6 +1786,7 @@ async function battleAction(action) {
   p.mp -= mpCost;
   const wasCrit = dmg >= Math.floor(p.atk * 2.2);
   e.hp = Math.max(0, e.hp - dmg);
+  G.battleStats.damageDealt = (G.battleStats.damageDealt || 0) + dmg;
   updateBattleUI();
   enemyHitEffect(dmg, wasCrit);
   if (e.hp <= 0) { enemyDied(); return; }
@@ -1562,7 +1975,10 @@ async function enemyTurn() {
   if (ps.defDown > 0) { ps.defDown--; if(ps.defDown===0) battleLog(`${p.name}のDEFが元に戻った！`, 'system'); }
   if (ps.atkDown > 0) { ps.atkDown--; if(ps.atkDown===0) battleLog(`${p.name}のATKが元に戻った！`, 'system'); }
 
-  if (realDmg > 0) playerHitEffect(realDmg);
+  if (realDmg > 0) {
+    G.battleStats.damageTaken = (G.battleStats.damageTaken || 0) + realDmg;
+    playerHitEffect(realDmg);
+  }
   updateBattleUI();
   updateEnemyArt();
   updateHeaderStats();
@@ -1636,31 +2052,112 @@ function enemyDied() {
   enemyDeathEffect(() => {
     if (e.id === 'dragonBoss') {
       gearTransition(() => showClear());
+    } else if (G.isRandomDungeon) {
+      // Random dungeon mode
+      if (G.player.gold >= 50 && typeof offerInn === 'function') {
+        offerInn(() => {
+          gearTransition(() => {
+            showScreen('dungeon');
+            updateDungeonUI();
+            loadRandomDungeonRoom(G.dungeonIndex + 1);
+          });
+        });
+      } else {
+        gearTransition(() => {
+          showScreen('dungeon');
+          updateDungeonUI();
+          loadRandomDungeonRoom(G.dungeonIndex + 1);
+        });
+      }
     } else {
-      gearTransition(() => {
-        showScreen('dungeon');
-        updateDungeonUI();
-        loadDungeonRoom(G.dungeonIndex + 1);
-      });
+      // Normal dungeon mode
+      if (G.player.gold >= 50 && typeof offerInn === 'function') {
+        offerInn(() => {
+          gearTransition(() => {
+            showScreen('dungeon');
+            updateDungeonUI();
+            loadDungeonRoom(G.dungeonIndex + 1);
+          });
+        });
+      } else {
+        gearTransition(() => {
+          showScreen('dungeon');
+          updateDungeonUI();
+          loadDungeonRoom(G.dungeonIndex + 1);
+        });
+      }
     }
   });
 }
 
 function gameOver() {
+  saveScore(false);
   G.battle.active = false;
   const p = G.player;
   gearTransition(() => {
+    const cls = CLASSES[p.class] || CLASSES.warrior;
     document.getElementById('gameover-stats').innerHTML =
-      `${p.name} Lv${p.level}  |  💰${p.gold}ゴールド`;
+      `${cls.icon}${p.name} Lv${p.level} [${cls.name}]  |  💰${p.gold}ゴールド`;
     showScreen('gameover');
   });
 }
 
 function showClear() {
+  saveScore(true);
   const p = G.player;
+  const stats = G.battleStats || {};
+  const cls = CLASSES[p.class] || CLASSES.warrior;
   document.getElementById('clear-stats').innerHTML =
-    `${p.name} Lv${p.level}  |  💰${p.gold}ゴールド  |  邪龍討伐！`;
+    `${cls.icon}${p.name} Lv${p.level} [${cls.name}]  |  💰${p.gold}ゴールド  |  邪龍討伐！`;
   showScreen('clear');
+
+  // Add AI ending text area to clear screen if not exists
+  let endingEl = document.getElementById('ai-ending-text');
+  if (!endingEl) {
+    endingEl = document.createElement('div');
+    endingEl.id = 'ai-ending-text';
+    endingEl.style.cssText = 'margin:16px auto;max-width:420px;padding:16px;background:#0a0a14;border:1px solid #2a2a44;border-radius:4px;font-size:12px;line-height:1.8;color:#aaaacc;text-align:left;min-height:60px;';
+    endingEl.textContent = G.apiKey ? '✨ エンディングを生成中...' : '';
+    const scoreEl = document.getElementById('clear-stats');
+    if (scoreEl) scoreEl.after(endingEl);
+  } else {
+    endingEl.textContent = G.apiKey ? '✨ エンディングを生成中...' : '';
+  }
+
+  if (!G.apiKey) return;
+
+  // Call AI for ending
+  generateAIEnding(p, stats).then(text => {
+    endingEl.textContent = text;
+  }).catch(() => {
+    endingEl.textContent = '勇者よ、ダンジョンの深淵から帰還したのだ。その勇気は永遠に語り継がれるだろう。';
+  });
+}
+
+async function generateAIEnding(player, stats) {
+  const skillSummary = Object.entries(stats.skillsUsed || {})
+    .map(([k,v]) => `${k}×${v}`).join(', ') || 'なし';
+  const prompt = `以下のRPGプレイデータをもとに、${player.name}の冒険のエンディングを日本語で100〜150文字で書いてください。感動的・叙事的なトーンで。
+名前:${player.name} Lv:${player.level} 取得Gold:${player.gold}
+総ダメージ:${stats.damageDealt||0} 被ダメ:${stats.damageTaken||0} ターン数:${stats.turns||0}
+使用スキル:${skillSummary}`;
+
+  const resp = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'x-api-key': G.apiKey,
+      'anthropic-version': '2023-06-01',
+      'anthropic-dangerous-direct-browser-access': 'true'
+    },
+    body: JSON.stringify({
+      model: 'claude-haiku-4-5-20251001',
+      max_tokens: 256,
+      messages: [{ role: 'user', content: prompt }]
+    })
+  });
+  const data = await resp.json();
+  return data.content?.[0]?.text || 'ダンジョンに光が戻った。';
 }
 
 // =============================================
@@ -1680,7 +2177,8 @@ function showMultiplayerLobby() {
 
 function mpCreateRoom() {
   if (mpPeer) mpPeer.destroy();
-  const code = Array.from({length:6},()=>'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'[Math.floor(Math.random()*33)]).join('');
+  const ROOM_ALPHA = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  const code = Array.from({length:6},()=>ROOM_ALPHA[Math.floor(Math.random()*ROOM_ALPHA.length)]).join('');
   mpIsHost = true;
   mpPeer = new Peer('DNGN_' + code);
   mpPeer.on('open', () => {
@@ -1723,7 +2221,7 @@ function myStats() { const p=G.player; return {hp:p.hp,maxHp:p.maxHp,mp:p.mp,max
 
 function handleMpData(data) {
   if (data.type === 'hello') {
-    mpOppState = { name: data.name, ...data.stats };
+    mpOppState = { name: escHtml(data.name || '???'), ...data.stats };
     startMpBattle();
   } else if (data.type === 'action') {
     handleMpOppAction(data);
@@ -1782,6 +2280,10 @@ function mpCloseSkill() {
   document.getElementById('mp-skill-menu').style.display='none';
 }
 
+function escHtml(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
 function mpLog(msg, type='system') {
   const log=document.getElementById('mp-battle-log');
   const div=document.createElement('div');
@@ -1834,7 +2336,7 @@ function handleMpOppAction(data) {
   if (data.action==='surrender') { mpLog(`🏳 ${op.name}が降参した！`,'enemy'); mpEndBattle(true); return; }
   if (data.action==='heal')      { mpLog(`💚 ${op.name}がHPを回復した！`,'enemy'); }
   else {
-    const realDmg = Math.max(1,(data.damage||10)-Math.floor((my.def||8)/2));
+    const realDmg = Math.max(1, data.damage || 10);
     my.hp = Math.max(0,my.hp-realDmg);
     mpLog(`💥 ${op.name}の攻撃！ ${my.name}に${realDmg}ダメージ！`,'enemy');
     if (my.hp<=0) { mpEndBattle(false); return; }
@@ -2344,6 +2846,170 @@ function pctBar(id, cur, max) { const el=document.getElementById(id); if(el) el.
 function set(id, val) { const el=document.getElementById(id); if(el) el.textContent=val; }
 function randInt(a, b) { return Math.floor(Math.random()*(b-a+1))+a; }
 function delay(ms) { return new Promise(r=>setTimeout(r,ms)); }
+
+// =============================================
+//  ショップ
+// =============================================
+let _shopNextAction = null;
+
+function showShop(nextAction) {
+  _shopNextAction = nextAction;
+  renderShopItems();
+  showScreen('shop');
+}
+
+function renderShopItems() {
+  const p = G.player;
+  set('shop-gold', p.gold + 'g');
+  set('shop-hp', p.hp + '/' + p.maxHp);
+  set('shop-mp', p.mp + '/' + p.maxMp);
+  const list = document.getElementById('shop-item-list');
+  list.innerHTML = '';
+  SHOP_ITEMS.forEach(si => {
+    const li = document.createElement('li');
+    const canAfford = p.gold >= si.price;
+    if (si.type === 'upgrade') {
+      const bought = G.shopUpgrades[si.id] || 0;
+      const maxed = bought >= si.max;
+      li.innerHTML = `<span>🔧 ${si.label} <span style="color:#555;font-size:10px;">${si.desc} (${bought}/${si.max})</span></span>`;
+      const btn = document.createElement('button');
+      btn.textContent = maxed ? 'MAX' : si.price + 'g';
+      btn.disabled = maxed || !canAfford;
+      btn.style.cssText = 'padding:3px 10px;font-size:11px;';
+      if (!maxed && canAfford) btn.className = 'primary';
+      btn.onclick = () => buyShopItem(si.id);
+      li.appendChild(btn);
+    } else {
+      li.innerHTML = `<span>${ITEMS[si.id]?.icon || '📦'} ${si.label} <span style="color:#555;font-size:10px;">${si.desc}</span></span>`;
+      const btn = document.createElement('button');
+      btn.textContent = si.price + 'g';
+      btn.disabled = !canAfford;
+      btn.style.cssText = 'padding:3px 10px;font-size:11px;';
+      if (canAfford) btn.className = 'success';
+      btn.onclick = () => buyShopItem(si.id);
+      li.appendChild(btn);
+    }
+    list.appendChild(li);
+  });
+}
+
+function buyShopItem(id) {
+  const p = G.player;
+  const si = SHOP_ITEMS.find(s => s.id === id);
+  if (!si || p.gold < si.price) return;
+  p.gold -= si.price;
+  if (si.type === 'upgrade') {
+    G.shopUpgrades[id] = (G.shopUpgrades[id] || 0) + 1;
+    si.apply(p);
+    showShopMsg(`${si.label}購入！`);
+  } else {
+    p.items.push({...ITEMS[id]});
+    showShopMsg(`${si.label}を購入！`);
+  }
+  renderShopItems();
+}
+
+function showShopMsg(msg) {
+  const el = document.getElementById('shop-msg');
+  if (!el) return;
+  el.textContent = msg;
+  setTimeout(() => { el.textContent = ''; }, 1800);
+}
+
+function closeShop() {
+  if (_shopNextAction) {
+    const fn = _shopNextAction;
+    _shopNextAction = null;
+    fn();
+  }
+}
+
+// =============================================
+//  宿屋
+// =============================================
+function offerInn(continueCallback) {
+  showScreen('dungeon');
+  updateDungeonUI();
+  const room = document.getElementById('dungeon-room-text');
+  room.innerHTML = `<span style="color:#ffdd44;font-size:13px;">🏠 宿屋</span><br><br>
+    疲れた旅人よ、一休みしていかないか？<br>
+    <span style="color:#aaaaff;">HP/MPが全回復します</span>`;
+  const exits = document.getElementById('room-exits');
+  exits.innerHTML = '';
+  const yesBtn = document.createElement('button');
+  yesBtn.innerHTML = '💰 50gで回復する (残り:' + G.player.gold + 'g)';
+  yesBtn.className = 'success';
+  yesBtn.onclick = () => {
+    G.player.gold -= 50;
+    G.player.hp = G.player.maxHp;
+    G.player.mp = G.player.maxMp;
+    dungeonLog('🏠 宿屋でHP/MPが全回復した！(50g消費)');
+    continueCallback();
+  };
+  const noBtn = document.createElement('button');
+  noBtn.innerHTML = '→ そのまま進む';
+  noBtn.onclick = () => continueCallback();
+  exits.appendChild(yesBtn);
+  exits.appendChild(noBtn);
+}
+
+// =============================================
+//  ハイスコア
+// =============================================
+function saveScore(won) {
+  const p = G.player;
+  const cls = CLASSES[p.class] || CLASSES.warrior;
+  const record = {
+    name: p.name,
+    class: cls.name,
+    classIcon: cls.icon,
+    level: p.level,
+    gold: p.gold,
+    won: won,
+    date: new Date().toLocaleDateString('ja-JP', {month:'numeric',day:'numeric'})
+  };
+  const scores = loadScores();
+  scores.unshift(record);
+  const trimmed = scores.slice(0, 10);
+  localStorage.setItem('dungeonAI_scores', JSON.stringify(trimmed));
+  renderHighScores();
+}
+
+function loadScores() {
+  try {
+    return JSON.parse(localStorage.getItem('dungeonAI_scores') || '[]');
+  } catch { return []; }
+}
+
+function renderHighScores() {
+  const list = document.getElementById('highscore-list');
+  if (!list) return;
+  const scores = loadScores();
+  if (!scores.length) { list.innerHTML = '<div style="color:#555;">記録なし</div>'; return; }
+  list.innerHTML = scores.slice(0, 5).map((s, i) => `
+    <div style="display:flex;justify-content:space-between;padding:3px 0;border-bottom:1px solid #111122;">
+      <span>${i+1}. ${s.classIcon}${s.name} Lv${s.level}</span>
+      <span>${s.won ? '<span style="color:#44ff88">CLEAR</span>' : '<span style="color:#ff6666">OVER</span>'}
+        <span class="gold">💰${s.gold}</span> ${s.date}</span>
+    </div>
+  `).join('');
+}
+
+// =============================================
+//  チュートリアル
+// =============================================
+function checkTutorial() {
+  if (!localStorage.getItem('dungeonAI_tutorialSeen')) {
+    document.getElementById('tutorial-overlay').classList.add('active');
+    return true;
+  }
+  return false;
+}
+
+function dismissTutorial() {
+  localStorage.setItem('dungeonAI_tutorialSeen', '1');
+  document.getElementById('tutorial-overlay').classList.remove('active');
+}
 </script>
 <!-- 歯車トランジション オーバーレイ -->
 <div id="gear-overlay">
