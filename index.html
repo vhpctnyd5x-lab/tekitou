@@ -829,7 +829,7 @@
   breath      炎ブレス：高ダメ
   tail        尻尾：プレイヤーDEF-6 (2ターン)
   regen       自己HP回復+50（邪龍）
-  rage        自ATK+15、自DEF-8（龍の怒り）
+  rage        自ATK+8、自DEF-5（龍の怒り）
   extinction  滅びの炎：超大ダメ（HP≤20%限定）
 */
 const ENEMIES = {
@@ -987,7 +987,7 @@ const ENEMIES = {
   // ==================== 🔴 上級：邪龍 ====================
   dragonBoss: {
     id: 'dragonBoss', name: '邪龍', rank: 'hard', rankLabel: '上級BOSS',
-    hp: 400, maxHp: 400, atk: 42, def: 22,
+    hp: 260, maxHp: 260, atk: 30, def: 14,
     exp: 700, gold: [200, 500],
     ascii: `
      ╔▲╗  ╔▲╗
@@ -1029,13 +1029,13 @@ const ENEMIES = {
         // HP≤20%: 滅びの炎モード
         if (hpRatio <= 0.20) {
           const r = Math.random();
-          if (r < 0.38) return { action:'extinction', damage: 80, speech: '滅びろ...！！！' };
-          if (r < 0.58) return { action:'breath',     damage: 58, speech: '炎で灰にしてやる！' };
+          if (r < 0.38) return { action:'extinction', damage: 55, speech: '滅びろ...！！！' };
+          if (r < 0.58) return { action:'breath',     damage: 40, speech: '炎で灰にしてやる！' };
           if (r < 0.70 && (es.regenUsed||0) < 2) {
             es.regenUsed = (es.regenUsed||0)+1;
             return { action:'regen', damage: 0, speech: '...再生する...' };
           }
-          return { action:'tail', damage: 48, speech: 'グォォォ！！' };
+          return { action:'tail', damage: 34, speech: 'グォォォ！！' };
         }
 
         // HP≤50%: 怒りフェーズ
@@ -1045,8 +1045,8 @@ const ENEMIES = {
             return { action:'rage', damage: 0, speech: '…本気を見せてやろう' };
           }
           const r = Math.random();
-          if (r < 0.28) return { action:'breath',    damage: 56, speech: '我が炎を受けよ！' };
-          if (r < 0.46) return { action:'tail',      damage: 44, speech: 'グォォォ！' };
+          if (r < 0.28) return { action:'breath',    damage: 38, speech: '我が炎を受けよ！' };
+          if (r < 0.46) return { action:'tail',      damage: 30, speech: 'グォォォ！' };
           if (r < 0.60 && es.roarCD === 0) {
             es.roarCD = 3;
             return { action:'roar', damage: 0, speech: 'ガアアア！！' };
@@ -1055,19 +1055,19 @@ const ENEMIES = {
             es.regenUsed = (es.regenUsed||0)+1;
             return { action:'regen', damage: 0, speech: '龍の回復力...' };
           }
-          return { action:'attack', damage: 46, speech: '塵芥め！' };
+          return { action:'attack', damage: 32, speech: '塵芥め！' };
         }
 
         // HP>50%: 様子見フェーズ
         const r = Math.random();
-        if (r < 0.38) return { action:'attack', damage: 42, speech: '塵芥め...' };
-        if (r < 0.58) return { action:'breath', damage: 50, speech: '炎よ！' };
-        if (r < 0.74) return { action:'tail',   damage: 36, speech: '邪魔だ' };
+        if (r < 0.38) return { action:'attack', damage: 28, speech: '塵芥め...' };
+        if (r < 0.58) return { action:'breath', damage: 34, speech: '炎よ！' };
+        if (r < 0.74) return { action:'tail',   damage: 24, speech: '邪魔だ' };
         if (r < 0.88 && es.roarCD === 0) {
           es.roarCD = 3;
           return { action:'roar', damage: 0, speech: 'グォォォ...' };
         }
-        return { action:'attack', damage: 44, speech: '消え去れ！' };
+        return { action:'attack', damage: 30, speech: '消え去れ！' };
       }
     }
   }
@@ -1946,7 +1946,7 @@ async function enemyTurn() {
 
     // ── 自己HP回復（邪龍） ──
     case 'regen': {
-      const healed = Math.min(50, e.maxHp - e.hp);
+      const healed = Math.min(35, e.maxHp - e.hp);
       e.hp += healed;
       battleLog(`✨ ${e.name}が龍の力で回復！HPが${healed}回復した！`, 'enemy');
       break;
@@ -1954,8 +1954,8 @@ async function enemyTurn() {
 
     // ── 龍の怒り：ATK上昇・DEF低下 ──
     case 'rage':
-      e.atk += 15; e.def = Math.max(0, e.def - 8);
-      battleLog(`💥 ${e.name}が龍の怒りを解放！ATK+15・DEF-8！（ATK:${e.atk}）`, 'special');
+      e.atk += 8; e.def = Math.max(0, e.def - 5);
+      battleLog(`💥 ${e.name}が龍の怒りを解放！ATK+8・DEF-5！（ATK:${e.atk}）`, 'special');
       break;
 
     // ── 滅びの炎（HP≤20%の切り札） ──
